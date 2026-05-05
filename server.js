@@ -19,7 +19,7 @@ const pool = require("./db");
 async function initDB() {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS items (
-id TEXT PRIMARY KEY
+      id TEXT PRIMARY KEY,
       name TEXT,
       cost NUMERIC,
       sold NUMERIC,
