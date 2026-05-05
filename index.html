@@ -693,7 +693,25 @@ function updateStats() {
 function buildCharts() {
   var now=Date.now(), WEEK=7*24*3600*1000, N=8, buckets=[];
   for(var i=0;i<N;i++) buckets.push({start:now-(N-i)*WEEK,end:now-(N-i-1)*WEEK,profit:0,sold:0,inv:0,cnt:0});
-  items.forEach(function(item){ var t=item.updatedAt?new Date(item.updatedAt).getTime():now; var c=parseFloat(item.cost)||0,s=parseFloat(item.sold)||0; for(var j=0;j<buckets.length;j++){var b=buckets[j];if(t>=b.start&&t<b.end){if(item.status==='SOLD'&&hasSold(item)){b.profit+=(s-c);b.sold+=s;b.cnt++;} if(item.status==='Delivered at Home')b.inv+=c; break;}} });
+  items.forEach(function(item){
+    var c = parseFloat(item.cost)||0, s = parseFloat(item.sold)||0;
+
+    // For SOLD items use sold_at (the exact moment they were sold)
+    // For inventory items use updatedAt
+    var raw = (item.status === 'SOLD' && item.sold_at)
+      ? item.sold_at
+      : (item.updatedAt || item.updatedat);
+    var t = raw ? new Date(raw).getTime() : (now - 1);
+
+    for(var j=0; j<buckets.length; j++){
+      var b = buckets[j];
+      if(t >= b.start && t <= b.end){
+        if(item.status === 'SOLD' && hasSold(item)){ b.profit+=(s-c); b.sold+=s; b.cnt++; }
+        if(item.status === 'Delivered at Home') b.inv+=c;
+        break;
+      }
+    }
+  });
   var labels=buckets.map(function(b){var d=new Date(b.start);return(d.getMonth()+1)+'/'+d.getDate();});
   drawChart('chart-profit',buckets.map(function(b){return b.profit;}),'#22c55e',labels,true);
   drawChart('chart-sold',  buckets.map(function(b){return b.sold;  }),'#f87171',labels,true);
@@ -720,15 +738,12 @@ function drawChart(id, vals, color, labels, isDollar) {
 }
 
 function renderRecent() {
-var recentStart = new Date('2026-05-04').getTime();
-
-var sold = items.filter(function(i){
-  return i.status === 'SOLD' &&
-         hasSold(i) &&
-         i.updatedAt &&
-         new Date(i.updatedAt).getTime() >= recentStart;
-});
-  sold.sort(function(a,b){return new Date(b.updatedAt||0)-new Date(a.updatedAt||0);});
+  var sold = items.filter(function(i){ return i.status==='SOLD' && hasSold(i); });
+  sold.sort(function(a,b){
+    var at = new Date(a.sold_at || a.updatedAt || a.updatedat || 0).getTime();
+    var bt = new Date(b.sold_at || b.updatedAt || b.updatedat || 0).getTime();
+    return bt - at;
+  });
   sold=sold.slice(0,8);
   var ee=document.getElementById('recent-empty'),te=document.getElementById('recent-table'),tb=document.getElementById('recent-tbody');
   if(sold.length===0){ee.style.display='';te.style.display='none';return;}
@@ -832,15 +847,11 @@ async function saveItem(){
     status: newStatus,
     tracking: document.getElementById('f-tracking').value.trim(),
     notes: document.getElementById('f-notes').value.trim(),
-
-    // Updates recent sales ONLY when item changes to SOLD
-    updatedAt: (
-      oldItem &&
-      oldItem.status !== 'SOLD' &&
-      newStatus === 'SOLD'
-    )
-      ? new Date().toISOString()
-      : (oldItem ? oldItem.updatedAt : new Date().toISOString())
+    updatedAt: new Date().toISOString(),
+    // sold_at: set once when item first becomes SOLD, never overwritten
+    sold_at: (newStatus === 'SOLD')
+      ? (oldItem && oldItem.sold_at ? oldItem.sold_at : new Date().toISOString())
+      : null
   };
 
   if(editId){

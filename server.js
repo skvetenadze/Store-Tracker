@@ -32,23 +32,18 @@ async function initDB() {
   `);
 
   await pool.query(`
-    CREATE TABLE IF NOT EXISTS suppliers (
-      id          TEXT PRIMARY KEY,
-      name        TEXT,
-      contact     TEXT,
-      platform    TEXT,
-      stars       INTEGER,
-      description TEXT,
-      created_at  TEXT
-    );
+    ALTER TABLE items ADD COLUMN IF NOT EXISTS sold_at TEXT;
   `);
 }
 
 app.get("/api/items", async (req, res) => {
   try {
     const result = await pool.query(`
-      SELECT * FROM items
-      ORDER BY row_order ASC NULLS LAST, updatedAt DESC
+      SELECT id, name, cost, sold, status, tracking, notes, row_order,
+             updatedat   AS "updatedAt",
+             sold_at     AS "sold_at"
+      FROM items
+      ORDER BY row_order ASC NULLS LAST, updatedat DESC
     `);
 
     res.json(result.rows);
@@ -78,8 +73,8 @@ app.post("/api/items", async (req, res) => {
 
       await client.query(
         `INSERT INTO items
-         (id, name, cost, sold, status, tracking, notes, updatedAt, row_order)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+         (id, name, cost, sold, status, tracking, notes, updatedAt, sold_at, row_order)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
         [
           item.id,
           item.name || "",
@@ -89,6 +84,7 @@ app.post("/api/items", async (req, res) => {
           item.tracking || "",
           item.notes || "",
           item.updatedAt || new Date().toISOString(),
+          item.sold_at || null,
           i
         ]
       );
@@ -99,48 +95,6 @@ app.post("/api/items", async (req, res) => {
   } catch (err) {
     await client.query("ROLLBACK");
     console.error("SAVE ERROR:", err);
-    res.status(500).json({ success: false, error: err.message });
-  } finally {
-    client.release();
-  }
-});
-
-app.get("/api/suppliers", async (req, res) => {
-  try {
-    const result = await pool.query(`SELECT * FROM suppliers ORDER BY created_at ASC`);
-    res.json(result.rows);
-  } catch (err) {
-    console.error("SUPPLIERS LOAD ERROR:", err);
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-app.post("/api/suppliers", async (req, res) => {
-  const suppliers = req.body;
-  const client = await pool.connect();
-  try {
-    await client.query("BEGIN");
-    await client.query("DELETE FROM suppliers");
-    for (const s of suppliers) {
-      await client.query(
-        `INSERT INTO suppliers (id, name, contact, platform, stars, description, created_at)
-         VALUES ($1,$2,$3,$4,$5,$6,$7)`,
-        [
-          s.id,
-          s.name        || "",
-          s.contact     || "",
-          s.platform    || "WeChat",
-          s.stars       || 0,
-          s.description || "",
-          s.created_at  || new Date().toISOString()
-        ]
-      );
-    }
-    await client.query("COMMIT");
-    res.json({ success: true, saved: suppliers.length });
-  } catch (err) {
-    await client.query("ROLLBACK");
-    console.error("SUPPLIERS SAVE ERROR:", err);
     res.status(500).json({ success: false, error: err.message });
   } finally {
     client.release();
