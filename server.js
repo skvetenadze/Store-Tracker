@@ -34,26 +34,44 @@ app.get("/api/items", async (req, res) => {
 app.post("/api/items", async (req, res) => {
   const items = req.body;
 
-  await pool.query("DELETE FROM items");
-
-  for (const item of items) {
-    await pool.query(
-      `INSERT INTO items (id, name, cost, sold, status, tracking, notes, updatedAt)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
-      [
-        item.id,
-        item.name,
-        item.cost,
-        item.sold,
-        item.status,
-        item.tracking,
-        item.notes,
-        item.updatedAt
-      ]
-    );
+  function num(v) {
+    if (v === "" || v === null || v === undefined) return null;
+    const n = parseFloat(String(v).replace(/[^0-9.]/g, ""));
+    return isNaN(n) ? null : n;
   }
 
-  res.json({ success: true });
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+    await client.query("DELETE FROM items");
+
+    for (const item of items) {
+      await client.query(
+        `INSERT INTO items (id, name, cost, sold, status, tracking, notes, updatedAt)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+        [
+          item.id,
+          item.name || "",
+          num(item.cost),
+          num(item.sold),
+          item.status || "Pending",
+          item.tracking || "",
+          item.notes || "",
+          item.updatedAt || new Date().toISOString()
+        ]
+      );
+    }
+
+    await client.query("COMMIT");
+    res.json({ success: true, saved: items.length });
+  } catch (err) {
+    await client.query("ROLLBACK");
+    console.error("SAVE ERROR:", err);
+    res.status(500).json({ success: false, error: err.message });
+  } finally {
+    client.release();
+  }
 });
 
 app.get("*", (req, res) => {
