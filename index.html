@@ -179,6 +179,61 @@ input[type="color"]::-webkit-color-swatch { border-radius:4px; border:none; }
 .btn-reset { font-size:11px; height:26px; padding:0 10px; color:var(--text3); border-color:var(--border); }
 .btn-reset:hover { color:var(--red); border-color:var(--red); }
 </style>
+
+<script>
+// Web replacement for Electron preload API. Keeps the app UI/functions the same.
+window.api = {
+  loadData: async function () {
+  try {
+    const res = await fetch("/api/items");
+    return await res.json();
+  } catch (e) {
+    return [];
+  }
+},
+  saveData: async function (items) {
+    await fetch("/api/items", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(items)
+});
+    return true;
+  },
+  openLink: async function (url) {
+    window.open(url, '_blank', 'noopener,noreferrer');
+    return true;
+  },
+  importCSV: async function () {
+    return new Promise(function(resolve){
+      var input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.csv,text/csv';
+      input.onchange = function(){
+        var file = input.files && input.files[0];
+        if(!file) return resolve(null);
+        var reader = new FileReader();
+        reader.onload = function(){ resolve(String(reader.result || '')); };
+        reader.onerror = function(){ resolve(null); };
+        reader.readAsText(file);
+      };
+      input.click();
+    });
+  },
+  exportCSV: async function (content) {
+    var blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'resells.csv';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    return true;
+  }
+};
+</script>
+
 </head>
 <body>
 
@@ -429,9 +484,13 @@ function badge(status) {
   return '<span class="badge '+(m[status]||'badge-pending')+'">'+status+'</span>';
 }
 
+function hasSold(i){ var v=i.sold; return v!==''&&v!==null&&v!==undefined; }
+
 function updateStats() {
   var profit=0,cost=0,sold=0,inv=0,sc=0,hc=0,ship=0,disp=0,dmg=0;
-  items.forEach(function(i){ var c=parseFloat(i.cost)||0,s=parseFloat(i.sold)||0; cost+=c; if(s>0){sold+=s;profit+=(s-c);} if(i.status==='Delivered at Home'){inv+=c;hc++;} if(i.status==='SOLD')sc++; if(i.status==='Shipped by Supplier'||i.status==='Shipped to Buyer')ship++; if(i.status==='DISPUTE')disp++; if(i.status==='DAMAGED')dmg++; });
+  items.forEach(function(i){ var c=parseFloat(i.cost)||0,s=parseFloat(i.sold)||0; cost+=c; 
+  if(hasSold(i)){sold+=s;profit+=(s-c);} 
+  if(i.status==='Delivered at Home'){inv+=c;hc++;} if(i.status==='SOLD')sc++; if(i.status==='Shipped by Supplier'||i.status==='Shipped to Buyer')ship++; if(i.status==='DISPUTE')disp++; if(i.status==='DAMAGED')dmg++; });
   document.getElementById('stat-profit').textContent='$'+profit.toFixed(2);
   document.getElementById('stat-cost').textContent='$'+cost.toFixed(2);
   document.getElementById('stat-sold').textContent='$'+sold.toFixed(2);
@@ -450,7 +509,7 @@ function updateStats() {
 function buildCharts() {
   var now=Date.now(), WEEK=7*24*3600*1000, N=8, buckets=[];
   for(var i=0;i<N;i++) buckets.push({start:now-(N-i)*WEEK,end:now-(N-i-1)*WEEK,profit:0,sold:0,inv:0,cnt:0});
-  items.forEach(function(item){ var t=item.updatedAt?new Date(item.updatedAt).getTime():now; var c=parseFloat(item.cost)||0,s=parseFloat(item.sold)||0; for(var j=0;j<buckets.length;j++){var b=buckets[j];if(t>=b.start&&t<b.end){if(item.status==='SOLD'&&s>0){b.profit+=(s-c);b.sold+=s;b.cnt++;} if(item.status==='Delivered at Home')b.inv+=c; break;}} });
+  items.forEach(function(item){ var t=item.updatedAt?new Date(item.updatedAt).getTime():now; var c=parseFloat(item.cost)||0,s=parseFloat(item.sold)||0; for(var j=0;j<buckets.length;j++){var b=buckets[j];if(t>=b.start&&t<b.end){if(item.status==='SOLD'&&hasSold(item)){b.profit+=(s-c);b.sold+=s;b.cnt++;} if(item.status==='Delivered at Home')b.inv+=c; break;}} });
   var labels=buckets.map(function(b){var d=new Date(b.start);return(d.getMonth()+1)+'/'+d.getDate();});
   drawChart('chart-profit',buckets.map(function(b){return b.profit;}),'#22c55e',labels,true);
   drawChart('chart-sold',  buckets.map(function(b){return b.sold;  }),'#f87171',labels,true);
@@ -481,7 +540,7 @@ var recentStart = new Date('2026-05-04').getTime();
 
 var sold = items.filter(function(i){
   return i.status === 'SOLD' &&
-         parseFloat(i.sold) > 0 &&
+         hasSold(i) &&
          i.updatedAt &&
          new Date(i.updatedAt).getTime() >= recentStart;
 });
@@ -500,7 +559,7 @@ function renderTable() {
   var tbody=document.getElementById('tbody'), empty=document.getElementById('empty-state');
   if(filtered.length===0){ tbody.innerHTML=''; empty.style.display=''; empty.querySelector('p').textContent=items.length===0?'No products yet':'No products match your search'; empty.querySelector('small').textContent=items.length===0?'Click "+ Add Product" to log your first item':'Try clearing your search or filter'; return; }
   empty.style.display='none';
-  tbody.innerHTML=filtered.map(function(i){ var c=parseFloat(i.cost)||0,s=parseFloat(i.sold)||0; var ph=s>0?'<span class="'+(s-c>=0?'profit-pos':'profit-neg')+'">$'+(s-c).toFixed(2)+'</span>':'<span class="profit-none">—</span>'; var url=detectCarrier(i.tracking),cr=carrierName(i.tracking),th='—'; if(i.tracking){var sh=i.tracking.length>12?'…'+i.tracking.slice(-10):i.tracking; th=url?'<a class="tracking-link" href="#" onclick="openLink(\''+url+'\');return false;" title="'+i.tracking+'">'+(cr?cr+' ':'')+sh+'</a>':'<span class="tracking-plain" title="'+i.tracking+'">'+i.tracking+'</span>';} return '<tr><td class="name" title="'+esc(i.name)+'">'+esc(i.name)+'</td><td class="money">'+(c>0?'$'+c.toFixed(2):'—')+'</td><td class="money">'+(s>0?'$'+s.toFixed(2):'—')+'</td><td>'+badge(i.status)+'</td><td>'+th+'</td><td class="notes" title="'+esc(i.notes||'')+'">'+(esc(i.notes||'')||'—')+'</td><td>'+ph+'</td><td class="actions"><button class="act-btn" onclick="editItem(\''+i.id+'\')" title="Edit">✏</button><button class="act-btn del" onclick="deleteItem(\''+i.id+'\')" title="Delete">✕</button></td></tr>'; }).join('');
+  tbody.innerHTML=filtered.map(function(i){ var c=parseFloat(i.cost)||0,s=parseFloat(i.sold)||0; var ph=hasSold(i)?'<span class="'+(s-c>=0?'profit-pos':'profit-neg')+'">$'+(s-c).toFixed(2)+'</span>':'<span class="profit-none">—</span>'; var url=detectCarrier(i.tracking),cr=carrierName(i.tracking),th='—'; if(i.tracking){var sh=i.tracking.length>12?'…'+i.tracking.slice(-10):i.tracking; th=url?'<a class="tracking-link" href="#" onclick="openLink(\''+url+'\');return false;" title="'+i.tracking+'">'+(cr?cr+' ':'')+sh+'</a>':'<span class="tracking-plain" title="'+i.tracking+'">'+i.tracking+'</span>';} return '<tr><td class="name" title="'+esc(i.name)+'">'+esc(i.name)+'</td><td class="money">'+(c>0?'$'+c.toFixed(2):'—')+'</td><td class="money">'+(hasSold(i)?'$'+s.toFixed(2):'—')+'</td><td>'+badge(i.status)+'</td><td>'+th+'</td><td class="notes" title="'+esc(i.notes||'')+'">'+(esc(i.notes||'')||'—')+'</td><td>'+ph+'</td><td class="actions"><button class="act-btn" onclick="editItem(\''+i.id+'\')" title="Edit">✏</button><button class="act-btn del" onclick="deleteItem(\''+i.id+'\')" title="Delete">✕</button></td></tr>'; }).join('');
 }
 
 function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -578,6 +637,7 @@ async function saveItem(){
     buildCharts();
     renderRecent();
   }
+  //await exportCSV();
 }
 async function deleteItem(id){
   if(!confirm('Delete this item? This cannot be undone.'))return;
@@ -601,7 +661,7 @@ async function importCSV(){
 }
 async function exportCSV(){
   var rows=[['Product','Cost','Sold','Status','Tracking','Notes','Profit']];
-  items.forEach(function(i){var c=parseFloat(i.cost)||0,s=parseFloat(i.sold)||0;rows.push([i.name,c||'',s||'',i.status,i.tracking||'',i.notes||'',s>0?(s-c).toFixed(2):'']);});
+  items.forEach(function(i){var c=parseFloat(i.cost)||0,s=parseFloat(i.sold)||0;rows.push([i.name,c||'',s||'',i.status,i.tracking||'',i.notes||'',hasSold(i)?(s-c).toFixed(2):'']);});
   var csv=rows.map(function(r){return r.map(function(v){return '"'+String(v).replace(/"/g,'""')+'"';}).join(',');}).join('\n');
   var ok=await window.api.exportCSV(csv); if(ok)alert('Exported successfully.');
 }
