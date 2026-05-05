@@ -1,6 +1,6 @@
 # 📦 Store Tracker
 
-A clean, fast web app for tracking your resell business — products, profits, shipping statuses, and suppliers — hosted on Railway with a PostgreSQL database.
+A clean, fast web app for tracking your resell business, products, profits, shipping statuses, and suppliers hosted on Railway with a PostgreSQL database.
 
 ---
 
