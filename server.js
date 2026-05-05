@@ -18,17 +18,32 @@ async function initDB() {
       status TEXT,
       tracking TEXT,
       notes TEXT,
-      updatedAt TEXT
+      updatedAt TEXT,
+      row_order INTEGER
     );
   `);
+
   await pool.query(`
-  ALTER TABLE items ADD COLUMN IF NOT EXISTS updatedAt TEXT;
-`);
+    ALTER TABLE items ADD COLUMN IF NOT EXISTS updatedAt TEXT;
+  `);
+
+  await pool.query(`
+    ALTER TABLE items ADD COLUMN IF NOT EXISTS row_order INTEGER;
+  `);
 }
 
 app.get("/api/items", async (req, res) => {
-  const result = await pool.query("SELECT * FROM items ORDER BY updatedAt DESC");
-  res.json(result.rows);
+  try {
+    const result = await pool.query(`
+      SELECT * FROM items
+      ORDER BY row_order ASC NULLS LAST, updatedAt DESC
+    `);
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error("LOAD ERROR:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
 });
 
 app.post("/api/items", async (req, res) => {
@@ -46,10 +61,13 @@ app.post("/api/items", async (req, res) => {
     await client.query("BEGIN");
     await client.query("DELETE FROM items");
 
-    for (const item of items) {
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+
       await client.query(
-        `INSERT INTO items (id, name, cost, sold, status, tracking, notes, updatedAt)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+        `INSERT INTO items
+         (id, name, cost, sold, status, tracking, notes, updatedAt, row_order)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
         [
           item.id,
           item.name || "",
@@ -58,7 +76,8 @@ app.post("/api/items", async (req, res) => {
           item.status || "Pending",
           item.tracking || "",
           item.notes || "",
-          item.updatedAt || new Date().toISOString()
+          item.updatedAt || new Date().toISOString(),
+          i
         ]
       );
     }
@@ -83,4 +102,3 @@ initDB().then(() => {
     console.log("Server running on port " + PORT);
   });
 });
-
