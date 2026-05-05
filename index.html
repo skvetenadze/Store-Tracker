@@ -487,7 +487,10 @@ function badge(status) {
 function updateStats() {
   var profit=0,cost=0,sold=0,inv=0,sc=0,hc=0,ship=0,disp=0,dmg=0;
   items.forEach(function(i){ var c=parseFloat(i.cost)||0,s=parseFloat(i.sold)||0; cost+=c; 
-  if(s>0){sold+=s;profit+=(s-c);} 
+  if(i.sold !== ''){
+  sold += s;
+  profit += (s - c);
+  } 
   if(i.status==='Delivered at Home'){inv+=c;hc++;} if(i.status==='SOLD')sc++; if(i.status==='Shipped by Supplier'||i.status==='Shipped to Buyer')ship++; if(i.status==='DISPUTE')disp++; if(i.status==='DAMAGED')dmg++; });
   document.getElementById('stat-profit').textContent='$'+profit.toFixed(2);
   document.getElementById('stat-cost').textContent='$'+cost.toFixed(2);
@@ -557,7 +560,7 @@ function renderTable() {
   var tbody=document.getElementById('tbody'), empty=document.getElementById('empty-state');
   if(filtered.length===0){ tbody.innerHTML=''; empty.style.display=''; empty.querySelector('p').textContent=items.length===0?'No products yet':'No products match your search'; empty.querySelector('small').textContent=items.length===0?'Click "+ Add Product" to log your first item':'Try clearing your search or filter'; return; }
   empty.style.display='none';
-  tbody.innerHTML=filtered.map(function(i){ var c=parseFloat(i.cost)||0,s=parseFloat(i.sold)||0; var ph=s>0?'<span class="'+(s-c>=0?'profit-pos':'profit-neg')+'">$'+(s-c).toFixed(2)+'</span>':'<span class="profit-none">—</span>'; var url=detectCarrier(i.tracking),cr=carrierName(i.tracking),th='—'; if(i.tracking){var sh=i.tracking.length>12?'…'+i.tracking.slice(-10):i.tracking; th=url?'<a class="tracking-link" href="#" onclick="openLink(\''+url+'\');return false;" title="'+i.tracking+'">'+(cr?cr+' ':'')+sh+'</a>':'<span class="tracking-plain" title="'+i.tracking+'">'+i.tracking+'</span>';} return '<tr><td class="name" title="'+esc(i.name)+'">'+esc(i.name)+'</td><td class="money">'+(c>0?'$'+c.toFixed(2):'—')+'</td><td class="money">'+(s>0?'$'+s.toFixed(2):'—')+'</td><td>'+badge(i.status)+'</td><td>'+th+'</td><td class="notes" title="'+esc(i.notes||'')+'">'+(esc(i.notes||'')||'—')+'</td><td>'+ph+'</td><td class="actions"><button class="act-btn" onclick="editItem(\''+i.id+'\')" title="Edit">✏</button><button class="act-btn del" onclick="deleteItem(\''+i.id+'\')" title="Delete">✕</button></td></tr>'; }).join('');
+  tbody.innerHTML=filtered.map(function(i){ var c=parseFloat(i.cost)||0,s=parseFloat(i.sold)||0; var ph=s>0?'<span class="'+(s-c>=0?'profit-pos':'profit-neg')+'">$'+(s-c).toFixed(2)+'</span>':'<span class="profit-none">—</span>'; var url=detectCarrier(i.tracking),cr=carrierName(i.tracking),th='—'; if(i.tracking){var sh=i.tracking.length>12?'…'+i.tracking.slice(-10):i.tracking; th=url?'<a class="tracking-link" href="#" onclick="openLink(\''+url+'\');return false;" title="'+i.tracking+'">'+(cr?cr+' ':'')+sh+'</a>':'<span class="tracking-plain" title="'+i.tracking+'">'+i.tracking+'</span>';} return '<tr><td class="name" title="'+esc(i.name)+'">'+esc(i.name)+'</td><td class="money">'+(c>0?'$'+c.toFixed(2):'—')+'</td><td class="money">'+(i.sold !== '' ? '$'+s.toFixed(2) : '—')+'</td><td>'+badge(i.status)+'</td><td>'+th+'</td><td class="notes" title="'+esc(i.notes||'')+'">'+(esc(i.notes||'')||'—')+'</td><td>'+ph+'</td><td class="actions"><button class="act-btn" onclick="editItem(\''+i.id+'\')" title="Edit">✏</button><button class="act-btn del" onclick="deleteItem(\''+i.id+'\')" title="Delete">✕</button></td></tr>'; }).join('');
 }
 
 function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
