@@ -21,6 +21,9 @@ async function initDB() {
       updatedAt TEXT
     );
   `);
+  await pool.query(`
+  ALTER TABLE items ADD COLUMN IF NOT EXISTS updatedAt TEXT;
+`);
 }
 
 app.get("/api/items", async (req, res) => {
@@ -63,6 +66,3 @@ initDB().then(() => {
   });
 });
 
-await pool.query(`
-  ALTER TABLE items ADD COLUMN IF NOT EXISTS updatedAt TEXT;
-`);
