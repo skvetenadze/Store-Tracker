@@ -486,7 +486,12 @@ function badge(status) {
 
 function updateStats() {
   var profit=0,cost=0,sold=0,inv=0,sc=0,hc=0,ship=0,disp=0,dmg=0;
-  items.forEach(function(i){ var c=parseFloat(i.cost)||0,s=parseFloat(i.sold)||0; cost+=c; if(s>0){sold+=s;profit+=(s-c);} if(i.status==='Delivered at Home'){inv+=c;hc++;} if(i.status==='SOLD')sc++; if(i.status==='Shipped by Supplier'||i.status==='Shipped to Buyer')ship++; if(i.status==='DISPUTE')disp++; if(i.status==='DAMAGED')dmg++; });
+  items.forEach(function(i){ var c=parseFloat(i.cost)||0,s=parseFloat(i.sold)||0; cost+=c; 
+  if(i.status === 'SOLD' && s > 0){
+  sold += s;
+  profit += (s - c);
+}
+  if(i.status==='Delivered at Home'){inv+=c;hc++;} if(i.status==='SOLD')sc++; if(i.status==='Shipped by Supplier'||i.status==='Shipped to Buyer')ship++; if(i.status==='DISPUTE')disp++; if(i.status==='DAMAGED')dmg++; });
   document.getElementById('stat-profit').textContent='$'+profit.toFixed(2);
   document.getElementById('stat-cost').textContent='$'+cost.toFixed(2);
   document.getElementById('stat-sold').textContent='$'+sold.toFixed(2);
