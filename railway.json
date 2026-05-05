@@ -1,0 +1,6 @@
+{
+  "$schema": "https://schema.railway.app/railway.schema.json",
+  "build": {
+    "installCommand": "npm install"
+  }
+}
