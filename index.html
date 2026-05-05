@@ -17,7 +17,7 @@
   --badge-supplier-bg:#14532d; --badge-supplier-text:#86efac;
   --badge-home-bg:#1e3a5f;     --badge-home-text:#60a5fa;
   --badge-buyer-bg:#451a03;    --badge-buyer-text:#fbbf24;
-  --badge-sold-bg:#14532d;     --badge-sold-text:#22c55e;
+  --badge-sold-bg:#ff5c5c;     --badge-sold-text:#ffd6d6;
   --badge-dispute-bg:#7f1d1d;  --badge-dispute-text:#f87171;
   --badge-damaged-bg:#262626;  --badge-damaged-text:#aaaaaa;
 }
@@ -558,8 +558,8 @@ window.api = {
 <script>
 var items = [], editId = null, currentTab = 'dashboard', activeChip = null, currentTheme = 'dark', customColors = {};
 
-var DEF_DARK = { pending:{text:'#a78bfa',bg:'#2e1065'}, supplier:{text:'#86efac',bg:'#14532d'}, home:{text:'#60a5fa',bg:'#1e3a5f'}, buyer:{text:'#fbbf24',bg:'#451a03'}, sold:{text:'#22c55e',bg:'#14532d'}, dispute:{text:'#f87171',bg:'#7f1d1d'}, damaged:{text:'#aaaaaa',bg:'#262626'} };
-var DEF_LIGHT = { pending:{text:'#6d28d9',bg:'#ede9fe'}, supplier:{text:'#166534',bg:'#dcfce7'}, home:{text:'#1d4ed8',bg:'#dbeafe'}, buyer:{text:'#92400e',bg:'#fef3c7'}, sold:{text:'#14532d',bg:'#dcfce7'}, dispute:{text:'#991b1b',bg:'#fee2e2'}, damaged:{text:'#6b7280',bg:'#f3f4f6'} };
+var DEF_DARK = { pending:{text:'#a78bfa',bg:'#2e1065'}, supplier:{text:'#86efac',bg:'#14532d'}, home:{text:'#60a5fa',bg:'#1e3a5f'}, buyer:{text:'#fbbf24',bg:'#451a03'}, sold:{text:'#ffd6d6',bg:'#ff5c5c'}, dispute:{text:'#f87171',bg:'#7f1d1d'}, damaged:{text:'#aaaaaa',bg:'#262626'} };
+var DEF_LIGHT = { pending:{text:'#6d28d9',bg:'#ede9fe'}, supplier:{text:'#166534',bg:'#dcfce7'}, home:{text:'#1d4ed8',bg:'#dbeafe'}, buyer:{text:'#92400e',bg:'#fef3c7'}, sold:{text:'#ffd6d6',bg:'#ff5c5c'}, dispute:{text:'#991b1b',bg:'#fee2e2'}, damaged:{text:'#6b7280',bg:'#f3f4f6'} };
 var CKEYS = ['pending','supplier','home','buyer','sold','dispute','damaged'];
 
 function loadSettings() {
