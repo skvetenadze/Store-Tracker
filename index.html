@@ -184,11 +184,19 @@ input[type="color"]::-webkit-color-swatch { border-radius:4px; border:none; }
 // Web replacement for Electron preload API. Keeps the app UI/functions the same.
 window.api = {
   loadData: async function () {
-    try { return JSON.parse(localStorage.getItem('resell-tracker-items') || '[]'); }
-    catch (e) { return []; }
-  },
+  try {
+    const res = await fetch("/api/items");
+    return await res.json();
+  } catch (e) {
+    return [];
+  }
+},
   saveData: async function (items) {
-    localStorage.setItem('resell-tracker-items', JSON.stringify(items || []));
+    await fetch("/api/items", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(items)
+});
     return true;
   },
   openLink: async function (url) {
@@ -625,6 +633,7 @@ async function saveItem(){
     buildCharts();
     renderRecent();
   }
+  await exportCSV();
 }
 async function deleteItem(id){
   if(!confirm('Delete this item? This cannot be undone.'))return;
