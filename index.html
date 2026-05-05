@@ -215,60 +215,57 @@ input[type="color"]::-webkit-color-swatch { border-radius:4px; border:none; }
 .bnav-label { font-size:10px; font-weight:600; letter-spacing:.2px; }
 
 @media (max-width: 768px) {
-  /* ── Body ── */
   body { padding-bottom:60px; }
 
-  /* ── Top nav: hidden on mobile — bottom nav handles navigation ── */
+  /* Hide desktop top nav and stats bar — bottom nav handles navigation */
   .topnav { display:none; }
-
-  /* ── Stats bar: hidden on mobile — dashboard cards show the same info ── */
   .stats-bar { display:none; }
 
-  /* ── Dashboard cards: 2 columns ── */
+  /* Search toolbar: fixed at BOTTOM above the bottom nav — easy thumb reach */
+  .toolbar {
+    position:fixed;
+    bottom:60px;
+    left:0; right:0;
+    z-index:150;
+    border-top:1px solid var(--border);
+    border-bottom:none;
+    padding:10px 14px;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  #search { min-width:0; width:100%; }
+  .toolbar select { flex:1; }
+  .item-count { width:100%; text-align:right; font-size:11px; }
+
+  /* Dashboard cards: 2 columns */
   .cards-grid { grid-template-columns:1fr 1fr; gap:10px; }
   .card-value { font-size:22px; }
   .card-chart { height:70px; }
   .dash-area { padding:14px 14px 80px; }
 
-  /* ── Recent sales table: horizontal scroll ── */
+  /* Recent sales table: horizontal scroll */
   .recent-box { overflow-x:auto; }
   .recent-box table { min-width:480px; }
 
-  /* ── Inventory toolbar: stack ── */
-  .toolbar { flex-wrap:wrap; padding:10px 14px; gap:8px; }
-  #search { min-width:0; width:100%; }
-  .toolbar select { flex:1; }
-  .item-count { width:100%; text-align:right; }
-
-  /* ── Desktop table: hide on mobile ── */
+  /* Hide desktop table, show mobile cards */
   .table-area { display:none; }
-
-  /* ── Mobile cards: show ── */
   .mob-cards { display:flex; }
 
-  /* ── FAB ── */
+  /* FAB and bottom nav */
   .fab { display:flex; }
-
-  /* ── Bottom nav ── */
   .bottom-nav { display:block; }
 
-  /* ── Modals: full width, slide from bottom ── */
+  /* Modals slide from bottom */
   .modal-overlay { align-items:flex-end; }
   .modal {
-    width:100%;
-    max-width:100%;
-    max-height:92vh;
+    width:100%; max-width:100%; max-height:92vh;
     border-radius:16px 16px 0 0;
     padding:20px 18px 32px;
     transform:translateY(100%);
     transition:transform .25s cubic-bezier(.4,0,.2,1);
   }
   .modal-overlay.open .modal { transform:translateY(0); }
-
-  /* ── Settings modal slightly smaller ── */
   .settings-modal { width:100%; }
-
-  /* ── Form rows comfortable touch size ── */
   .form-row input, .form-row select, .form-row textarea { font-size:16px; padding:10px 12px; height:auto; }
   .form-row textarea { height:80px; }
   .form-row label { font-size:13px; }
@@ -281,6 +278,41 @@ input[type="color"]::-webkit-color-swatch { border-radius:4px; border:none; }
   .cards-grid { grid-template-columns:1fr; }
   .card-value { font-size:26px; }
   .card-chart { height:60px; }
+}
+
+/* ════ SUPPLIERS ════ */
+.sup-area { flex:1; overflow-y:auto; padding:28px; -webkit-overflow-scrolling:touch; }
+.sup-area::-webkit-scrollbar{width:6px;} .sup-area::-webkit-scrollbar-track{background:transparent;} .sup-area::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+.sup-hdr { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:12px; }
+.sup-hdr-text h2 { font-size:22px; font-weight:700; margin-bottom:4px; }
+.sup-hdr-text p  { font-size:13px; color:var(--text3); }
+.sup-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:14px; }
+.sup-card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius-lg); padding:18px 20px 16px; transition:border-color .15s,box-shadow .15s; }
+.sup-card:hover { border-color:var(--border3); box-shadow:0 4px 20px rgba(0,0,0,.18); }
+.sup-card-top { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:10px; }
+.sup-name { font-size:15px; font-weight:700; margin-bottom:5px; }
+.sup-badge { display:inline-flex; align-items:center; gap:5px; padding:2px 9px; border-radius:20px; font-size:11px; font-weight:700; }
+.sup-badge-wechat   { background:#1a4731; color:#22c55e; }
+.sup-badge-whatsapp { background:#14532d; color:#4ade80; }
+[data-theme="light"] .sup-badge-wechat   { background:#dcfce7; color:#15803d; }
+[data-theme="light"] .sup-badge-whatsapp { background:#bbf7d0; color:#166534; }
+.sup-stars { display:flex; gap:2px; }
+.sup-star { font-size:16px; line-height:1; }
+.sup-actions { display:flex; gap:4px; }
+.sup-contact { display:flex; align-items:center; gap:6px; margin-top:8px; font-size:12px; color:var(--text3); }
+.sup-contact span { color:var(--text2); font-weight:500; }
+.sup-desc { font-size:13px; color:var(--text2); line-height:1.5; margin-top:8px; }
+.sup-empty { text-align:center; padding:60px 20px; color:var(--text3); }
+.sup-empty-icon { font-size:40px; margin-bottom:12px; }
+.sup-empty p { font-size:14px; margin-bottom:6px; color:var(--text2); }
+.sup-empty small { font-size:12px; }
+.star-picker { display:flex; gap:4px; }
+.star-pick { font-size:22px; cursor:pointer; opacity:.3; transition:transform .1s; user-select:none; }
+.star-pick.on { opacity:1; }
+.star-pick:hover { transform:scale(1.15); }
+@media (max-width:768px) {
+  .sup-area { padding:16px 14px 80px; }
+  .sup-grid { grid-template-columns:1fr; }
 }
 </style>
 
@@ -349,6 +381,7 @@ window.api = {
   <div class="nav-tabs">
     <button class="nav-tab active" id="tab-dashboard" onclick="switchTab('dashboard')">⊞ Dashboard</button>
     <button class="nav-tab"        id="tab-inventory" onclick="switchTab('inventory')">🏠 Inventory</button>
+    <button class="nav-tab"        id="tab-suppliers" onclick="switchTab('suppliers')">🤝 Suppliers</button>
     <button class="nav-tab"        id="tab-settings"  onclick="switchTab('settings')">⚙ Settings</button>
   </div>
   <div class="nav-actions">
@@ -461,6 +494,51 @@ window.api = {
   </div>
 </div>
 
+<!-- SUPPLIERS VIEW -->
+<div class="view" id="view-suppliers">
+  <div class="sup-area">
+    <div class="sup-hdr">
+      <div class="sup-hdr-text"><h2>Suppliers</h2><p>Manage your supplier relationships</p></div>
+      <button class="btn btn-primary" onclick="openSupModal()">+ Add Supplier</button>
+    </div>
+    <div class="sup-grid" id="sup-grid"></div>
+    <div id="sup-empty" class="sup-empty" style="display:none">
+      <div class="sup-empty-icon">🤝</div>
+      <p>No suppliers yet</p>
+      <small>Click &quot;+ Add Supplier&quot; to add your first one</small>
+    </div>
+  </div>
+</div>
+
+<!-- SUPPLIER MODAL -->
+<div class="modal-overlay" id="sup-overlay" onclick="closeSupModalBg(event)">
+  <div class="modal">
+    <h2 id="sup-modal-title">Add Supplier</h2>
+    <div class="form-row"><label>Supplier Name *</label><input id="sup-name" placeholder="e.g. Lulu Alice" autocomplete="off"></div>
+    <div class="form-row"><label>Contact (username / number)</label><input id="sup-contact" placeholder="e.g. @lulualice or +1 555 0000" autocomplete="off"></div>
+    <div class="form-row"><label>Platform</label>
+      <select id="sup-platform">
+        <option value="WeChat">WeChat</option>
+        <option value="WhatsApp">WhatsApp</option>
+      </select>
+    </div>
+    <div class="form-row"><label>Rating</label>
+      <div class="star-picker">
+        <span class="star-pick" data-v="1" onclick="setStarPick(1)">&#9733;</span>
+        <span class="star-pick" data-v="2" onclick="setStarPick(2)">&#9733;</span>
+        <span class="star-pick" data-v="3" onclick="setStarPick(3)">&#9733;</span>
+        <span class="star-pick" data-v="4" onclick="setStarPick(4)">&#9733;</span>
+        <span class="star-pick" data-v="5" onclick="setStarPick(5)">&#9733;</span>
+      </div>
+    </div>
+    <div class="form-row"><label>Description / Notes</label><textarea id="sup-desc" placeholder="e.g. Reliable, ships fast, good quality..."></textarea></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeSupModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSupplier()">Save</button>
+    </div>
+  </div>
+</div>
+
 <!-- SETTINGS MODAL -->
 <div class="modal-overlay" id="settings-overlay" onclick="closeSettingsBg(event)">
   <div class="modal settings-modal">
@@ -531,14 +609,21 @@ function closeSettingsBg(e) { if(e.target===document.getElementById('settings-ov
 function switchTab(tab) {
   if (tab==='settings') { openSettings(); return; }
   currentTab = tab;
-  ['dashboard','inventory'].forEach(function(t){ document.getElementById('tab-'+t).classList.toggle('active',t===tab); document.getElementById('view-'+t).classList.toggle('active',t===tab); });
-  document.getElementById('tab-settings').classList.remove('active');
-  // Sync bottom nav
+  ['dashboard','inventory','suppliers'].forEach(function(t) {
+    var te = document.getElementById('tab-'+t);
+    var ve = document.getElementById('view-'+t);
+    if (te) te.classList.toggle('active', t===tab);
+    if (ve) ve.classList.toggle('active', t===tab);
+  });
+  var ts = document.getElementById('tab-settings');
+  if (ts) ts.classList.remove('active');
   ['dashboard','inventory','suppliers','settings'].forEach(function(t){
-    var el=document.getElementById('bnav-'+t); if(el) el.classList.toggle('active',t===tab);
+    var el = document.getElementById('bnav-'+t);
+    if (el) el.classList.toggle('active', t===tab);
   });
   if (tab==='inventory') { document.getElementById('status-filter').value=''; activeChip=null; setChipActive(null); renderTable(); }
   if (tab==='dashboard') { buildCharts(); renderRecent(); }
+  if (tab==='suppliers') { renderSuppliers(); }
 }
 
 function chipFilter(status) {
@@ -824,8 +909,146 @@ async function exportCSV(){
   var ok=await window.api.exportCSV(csv); if(ok)alert('Exported successfully.');
 }
 
+
+// ════ SUPPLIERS ════
+var suppliers = [];
+var editSupId = null;
+var pickedStars = 0;
+
+async function loadSuppliers() {
+  try {
+    var r = await fetch('/api/suppliers');
+    var data = await r.json();
+    suppliers = Array.isArray(data) ? data : [];
+  } catch(e) { suppliers = []; }
+}
+
+function saveSuppliers() {
+  fetch('/api/suppliers', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(suppliers)
+  }).catch(function(e){ console.error('Suppliers save error', e); });
+}
+
+function renderSuppliers() {
+  var grid = document.getElementById('sup-grid');
+  var empty = document.getElementById('sup-empty');
+  if (!grid) return;
+  if (!suppliers || suppliers.length === 0) {
+    grid.innerHTML = '';
+    if (empty) empty.style.display = '';
+    return;
+  }
+  if (empty) empty.style.display = 'none';
+  grid.innerHTML = suppliers.map(function(s) {
+    var stars = '';
+    for (var i = 1; i <= 5; i++) {
+      stars += '<span class="sup-star" style="color:' + (i <= (s.stars||0) ? '#fbbf24' : 'var(--border3)') + '">&#9733;</span>';
+    }
+    var pb = s.platform === 'WhatsApp'
+      ? '<span class="sup-badge sup-badge-whatsapp">WhatsApp</span>'
+      : '<span class="sup-badge sup-badge-wechat">WeChat</span>';
+    var desc = s.description || s.desc || '';
+    var sid = esc(s.id);
+    return '<div class="sup-card">'
+      + '<div class="sup-card-top">'
+      + '<div><div class="sup-name">' + esc(s.name) + '</div>' + pb + '</div>'
+      + '<div style="display:flex;align-items:center;gap:10px">'
+      + '<div class="sup-stars">' + stars + '</div>'
+      + '<div class="sup-actions">'
+      + '<button class="act-btn" onclick="editSupplier(this)" data-id="' + sid + '" title="Edit">&#9999;</button>'
+      + '<button class="act-btn del" onclick="deleteSupplier(this)" data-id="' + sid + '" title="Delete">&#10005;</button>'
+      + '</div></div></div>'
+      + (s.contact ? '<div class="sup-contact">&#128222; <span>' + esc(s.contact) + '</span></div>' : '')
+      + (desc ? '<div class="sup-desc">' + esc(desc) + '</div>' : '')
+      + '</div>';
+  }).join('');
+}
+
+function setStarPick(n) {
+  pickedStars = n;
+  document.querySelectorAll('.star-pick').forEach(function(el) {
+    el.classList.toggle('on', parseInt(el.getAttribute('data-v')) <= n);
+  });
+}
+
+function openSupModal() {
+  editSupId = null;
+  document.getElementById('sup-modal-title').textContent = 'Add Supplier';
+  document.getElementById('sup-name').value = '';
+  document.getElementById('sup-contact').value = '';
+  document.getElementById('sup-platform').value = 'WeChat';
+  document.getElementById('sup-desc').value = '';
+  setStarPick(0);
+  document.getElementById('sup-overlay').classList.add('open');
+  document.getElementById('sup-name').focus();
+}
+
+function editSupplier(btn) {
+  var id = btn.getAttribute('data-id');
+  var s = null;
+  for (var i = 0; i < suppliers.length; i++) {
+    if (suppliers[i].id === id) { s = suppliers[i]; break; }
+  }
+  if (!s) return;
+  editSupId = id;
+  document.getElementById('sup-modal-title').textContent = 'Edit Supplier';
+  document.getElementById('sup-name').value = s.name || '';
+  document.getElementById('sup-contact').value = s.contact || '';
+  document.getElementById('sup-platform').value = s.platform || 'WeChat';
+  document.getElementById('sup-desc').value = s.description || s.desc || '';
+  setStarPick(s.stars || 0);
+  document.getElementById('sup-overlay').classList.add('open');
+  document.getElementById('sup-name').focus();
+}
+
+function deleteSupplier(btn) {
+  var id = btn.getAttribute('data-id');
+  if (!confirm('Delete this supplier?')) return;
+  suppliers = suppliers.filter(function(s) { return s.id !== id; });
+  saveSuppliers();
+  renderSuppliers();
+}
+
+function closeSupModal() { document.getElementById('sup-overlay').classList.remove('open'); }
+function closeSupModalBg(e) { if (e.target === document.getElementById('sup-overlay')) closeSupModal(); }
+
+function saveSupplier() {
+  var name = document.getElementById('sup-name').value.trim();
+  if (!name) {
+    document.getElementById('sup-name').focus();
+    document.getElementById('sup-name').style.borderColor = '#ef4444';
+    setTimeout(function(){ document.getElementById('sup-name').style.borderColor = ''; }, 1500);
+    return;
+  }
+  var rec = {
+    name: name,
+    contact: document.getElementById('sup-contact').value.trim(),
+    platform: document.getElementById('sup-platform').value,
+    stars: pickedStars,
+    description: document.getElementById('sup-desc').value.trim()
+  };
+  if (editSupId) {
+    for (var i = 0; i < suppliers.length; i++) {
+      if (suppliers[i].id === editSupId) {
+        suppliers[i] = Object.assign({}, suppliers[i], rec);
+        break;
+      }
+    }
+  } else {
+    rec.id = Date.now().toString(36) + Math.random().toString(36).slice(2);
+    rec.created_at = new Date().toISOString();
+    suppliers.push(rec);
+  }
+  saveSuppliers();
+  closeSupModal();
+  renderSuppliers();
+}
+
 async function init(){
   loadSettings();
+  await loadSuppliers();
   items=await window.api.loadData();
   updateStats();
   renderTable();
