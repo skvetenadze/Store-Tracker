@@ -217,39 +217,35 @@ input[type="color"]::-webkit-color-swatch { border-radius:4px; border:none; }
 @media (max-width: 768px) {
   body { padding-bottom:60px; }
 
-  /* Hide desktop top nav and stats bar — bottom nav handles navigation */
+  /* Hide desktop top bar — bottom nav handles navigation */
   .topnav { display:none; }
   .stats-bar { display:none; }
 
-  /* Search toolbar: fixed at BOTTOM above the bottom nav — easy thumb reach */
+  /* Search toolbar — fixed at bottom above the bottom nav */
   .toolbar {
-    position:fixed;
-    bottom:60px;
-    left:0; right:0;
-    z-index:150;
-    border-top:1px solid var(--border);
-    border-bottom:none;
-    padding:10px 14px;
-    gap:8px;
-    flex-wrap:wrap;
+    position:fixed; bottom:60px; left:0; right:0; z-index:150;
+    border-top:1px solid var(--border); border-bottom:none;
+    padding:10px 14px; gap:8px; flex-wrap:wrap;
   }
   #search { min-width:0; width:100%; }
   .toolbar select { flex:1; }
   .item-count { width:100%; text-align:right; font-size:11px; }
 
-  /* Dashboard cards: 2 columns */
+  /* Dashboard */
   .cards-grid { grid-template-columns:1fr 1fr; gap:10px; }
   .card-value { font-size:22px; }
   .card-chart { height:70px; }
   .dash-area { padding:14px 14px 80px; }
-
-  /* Recent sales table: horizontal scroll */
   .recent-box { overflow-x:auto; }
   .recent-box table { min-width:480px; }
 
-  /* Hide desktop table, show mobile cards */
+  /* Hide desktop table, show mobile card list */
   .table-area { display:none; }
-  .mob-cards { display:flex; }
+  .mob-cards { display:flex; flex:1; overflow-y:auto; min-height:0; -webkit-overflow-scrolling:touch; }
+
+  /* Suppliers */
+  .sup-area { padding:16px 14px 80px; }
+  .sup-grid { grid-template-columns:1fr; }
 
   /* FAB and bottom nav */
   .fab { display:flex; }
@@ -259,10 +255,8 @@ input[type="color"]::-webkit-color-swatch { border-radius:4px; border:none; }
   .modal-overlay { align-items:flex-end; }
   .modal {
     width:100%; max-width:100%; max-height:92vh;
-    border-radius:16px 16px 0 0;
-    padding:20px 18px 32px;
-    transform:translateY(100%);
-    transition:transform .25s cubic-bezier(.4,0,.2,1);
+    border-radius:16px 16px 0 0; padding:20px 18px 32px;
+    transform:translateY(100%); transition:transform .25s cubic-bezier(.4,0,.2,1);
   }
   .modal-overlay.open .modal { transform:translateY(0); }
   .settings-modal { width:100%; }
@@ -281,20 +275,20 @@ input[type="color"]::-webkit-color-swatch { border-radius:4px; border:none; }
 }
 
 /* ════ SUPPLIERS ════ */
-.sup-area { flex:1; overflow-y:auto; padding:28px; -webkit-overflow-scrolling:touch; }
+.sup-area { flex:1; overflow-y:auto; min-height:0; padding:28px; -webkit-overflow-scrolling:touch; }
 .sup-area::-webkit-scrollbar{width:6px;} .sup-area::-webkit-scrollbar-track{background:transparent;} .sup-area::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
 .sup-hdr { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:12px; }
 .sup-hdr-text h2 { font-size:22px; font-weight:700; margin-bottom:4px; }
-.sup-hdr-text p  { font-size:13px; color:var(--text3); }
+.sup-hdr-text p { font-size:13px; color:var(--text3); }
 .sup-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:14px; }
 .sup-card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius-lg); padding:18px 20px 16px; transition:border-color .15s,box-shadow .15s; }
 .sup-card:hover { border-color:var(--border3); box-shadow:0 4px 20px rgba(0,0,0,.18); }
 .sup-card-top { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:10px; }
 .sup-name { font-size:15px; font-weight:700; margin-bottom:5px; }
 .sup-badge { display:inline-flex; align-items:center; gap:5px; padding:2px 9px; border-radius:20px; font-size:11px; font-weight:700; }
-.sup-badge-wechat   { background:#1a4731; color:#22c55e; }
+.sup-badge-wechat { background:#1a4731; color:#22c55e; }
 .sup-badge-whatsapp { background:#14532d; color:#4ade80; }
-[data-theme="light"] .sup-badge-wechat   { background:#dcfce7; color:#15803d; }
+[data-theme="light"] .sup-badge-wechat { background:#dcfce7; color:#15803d; }
 [data-theme="light"] .sup-badge-whatsapp { background:#bbf7d0; color:#166534; }
 .sup-stars { display:flex; gap:2px; }
 .sup-star { font-size:16px; line-height:1; }
@@ -310,10 +304,6 @@ input[type="color"]::-webkit-color-swatch { border-radius:4px; border:none; }
 .star-pick { font-size:22px; cursor:pointer; opacity:.3; transition:transform .1s; user-select:none; }
 .star-pick.on { opacity:1; }
 .star-pick:hover { transform:scale(1.15); }
-@media (max-width:768px) {
-  .sup-area { padding:16px 14px 80px; }
-  .sup-grid { grid-template-columns:1fr; }
-}
 </style>
 
 <script>
@@ -610,16 +600,14 @@ function switchTab(tab) {
   if (tab==='settings') { openSettings(); return; }
   currentTab = tab;
   ['dashboard','inventory','suppliers'].forEach(function(t) {
-    var te = document.getElementById('tab-'+t);
-    var ve = document.getElementById('view-'+t);
-    if (te) te.classList.toggle('active', t===tab);
-    if (ve) ve.classList.toggle('active', t===tab);
+    var te=document.getElementById('tab-'+t), ve=document.getElementById('view-'+t);
+    if(te) te.classList.toggle('active',t===tab);
+    if(ve) ve.classList.toggle('active',t===tab);
   });
-  var ts = document.getElementById('tab-settings');
-  if (ts) ts.classList.remove('active');
+  document.getElementById('tab-settings').classList.remove('active');
+  // Sync bottom nav
   ['dashboard','inventory','suppliers','settings'].forEach(function(t){
-    var el = document.getElementById('bnav-'+t);
-    if (el) el.classList.toggle('active', t===tab);
+    var el=document.getElementById('bnav-'+t); if(el) el.classList.toggle('active',t===tab);
   });
   if (tab==='inventory') { document.getElementById('status-filter').value=''; activeChip=null; setChipActive(null); renderTable(); }
   if (tab==='dashboard') { buildCharts(); renderRecent(); }
@@ -911,139 +899,87 @@ async function exportCSV(){
 
 
 // ════ SUPPLIERS ════
-var suppliers = [];
-var editSupId = null;
-var pickedStars = 0;
+var suppliers=[], editSupId=null, pickedStars=0;
 
 async function loadSuppliers() {
-  try {
-    var r = await fetch('/api/suppliers');
-    var data = await r.json();
-    suppliers = Array.isArray(data) ? data : [];
-  } catch(e) { suppliers = []; }
+  try { var r=await fetch('/api/suppliers'); var d=await r.json(); suppliers=Array.isArray(d)?d:[]; }
+  catch(e) { suppliers=[]; }
 }
 
 function saveSuppliers() {
-  fetch('/api/suppliers', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify(suppliers)
-  }).catch(function(e){ console.error('Suppliers save error', e); });
+  fetch('/api/suppliers',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(suppliers)})
+    .catch(function(e){console.error('Suppliers save error',e);});
 }
 
 function renderSuppliers() {
-  var grid = document.getElementById('sup-grid');
-  var empty = document.getElementById('sup-empty');
-  if (!grid) return;
-  if (!suppliers || suppliers.length === 0) {
-    grid.innerHTML = '';
-    if (empty) empty.style.display = '';
-    return;
-  }
-  if (empty) empty.style.display = 'none';
-  grid.innerHTML = suppliers.map(function(s) {
-    var stars = '';
-    for (var i = 1; i <= 5; i++) {
-      stars += '<span class="sup-star" style="color:' + (i <= (s.stars||0) ? '#fbbf24' : 'var(--border3)') + '">&#9733;</span>';
-    }
-    var pb = s.platform === 'WhatsApp'
-      ? '<span class="sup-badge sup-badge-whatsapp">WhatsApp</span>'
-      : '<span class="sup-badge sup-badge-wechat">WeChat</span>';
-    var desc = s.description || s.desc || '';
-    var sid = esc(s.id);
+  var grid=document.getElementById('sup-grid'), empty=document.getElementById('sup-empty');
+  if(!grid) return;
+  if(!suppliers||suppliers.length===0){ grid.innerHTML=''; if(empty)empty.style.display=''; return; }
+  if(empty) empty.style.display='none';
+  grid.innerHTML=suppliers.map(function(s){
+    var stars='';
+    for(var i=1;i<=5;i++) stars+='<span class="sup-star" style="color:'+(i<=(s.stars||0)?'#fbbf24':'var(--border3)')+'">&#9733;</span>';
+    var pb=s.platform==='WhatsApp'?'<span class="sup-badge sup-badge-whatsapp">WhatsApp</span>':'<span class="sup-badge sup-badge-wechat">WeChat</span>';
+    var desc=s.description||s.desc||'';
     return '<div class="sup-card">'
-      + '<div class="sup-card-top">'
-      + '<div><div class="sup-name">' + esc(s.name) + '</div>' + pb + '</div>'
-      + '<div style="display:flex;align-items:center;gap:10px">'
-      + '<div class="sup-stars">' + stars + '</div>'
-      + '<div class="sup-actions">'
-      + '<button class="act-btn" onclick="editSupplier(this)" data-id="' + sid + '" title="Edit">&#9999;</button>'
-      + '<button class="act-btn del" onclick="deleteSupplier(this)" data-id="' + sid + '" title="Delete">&#10005;</button>'
-      + '</div></div></div>'
-      + (s.contact ? '<div class="sup-contact">&#128222; <span>' + esc(s.contact) + '</span></div>' : '')
-      + (desc ? '<div class="sup-desc">' + esc(desc) + '</div>' : '')
-      + '</div>';
+      +'<div class="sup-card-top"><div><div class="sup-name">'+esc(s.name)+'</div>'+pb+'</div>'
+      +'<div style="display:flex;align-items:center;gap:10px"><div class="sup-stars">'+stars+'</div>'
+      +'<div class="sup-actions">'
+      +'<button class="act-btn" data-id="'+esc(s.id)+'" onclick="editSupplier(this)">&#9999;</button>'
+      +'<button class="act-btn del" data-id="'+esc(s.id)+'" onclick="deleteSupplier(this)">&#10005;</button>'
+      +'</div></div></div>'
+      +(s.contact?'<div class="sup-contact">&#128222; <span>'+esc(s.contact)+'</span></div>':'')
+      +(desc?'<div class="sup-desc">'+esc(desc)+'</div>':'')
+      +'</div>';
   }).join('');
 }
 
-function setStarPick(n) {
-  pickedStars = n;
-  document.querySelectorAll('.star-pick').forEach(function(el) {
-    el.classList.toggle('on', parseInt(el.getAttribute('data-v')) <= n);
-  });
+function setStarPick(n){
+  pickedStars=n;
+  document.querySelectorAll('.star-pick').forEach(function(el){el.classList.toggle('on',parseInt(el.getAttribute('data-v'))<=n);});
 }
-
-function openSupModal() {
-  editSupId = null;
-  document.getElementById('sup-modal-title').textContent = 'Add Supplier';
-  document.getElementById('sup-name').value = '';
-  document.getElementById('sup-contact').value = '';
-  document.getElementById('sup-platform').value = 'WeChat';
-  document.getElementById('sup-desc').value = '';
+function openSupModal(){
+  editSupId=null;
+  document.getElementById('sup-modal-title').textContent='Add Supplier';
+  ['sup-name','sup-contact','sup-desc'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('sup-platform').value='WeChat';
   setStarPick(0);
   document.getElementById('sup-overlay').classList.add('open');
   document.getElementById('sup-name').focus();
 }
-
-function editSupplier(btn) {
-  var id = btn.getAttribute('data-id');
-  var s = null;
-  for (var i = 0; i < suppliers.length; i++) {
-    if (suppliers[i].id === id) { s = suppliers[i]; break; }
-  }
-  if (!s) return;
-  editSupId = id;
-  document.getElementById('sup-modal-title').textContent = 'Edit Supplier';
-  document.getElementById('sup-name').value = s.name || '';
-  document.getElementById('sup-contact').value = s.contact || '';
-  document.getElementById('sup-platform').value = s.platform || 'WeChat';
-  document.getElementById('sup-desc').value = s.description || s.desc || '';
-  setStarPick(s.stars || 0);
+function editSupplier(btn){
+  var id=btn.getAttribute('data-id'), s=null;
+  for(var i=0;i<suppliers.length;i++){if(suppliers[i].id===id){s=suppliers[i];break;}}
+  if(!s)return;
+  editSupId=id;
+  document.getElementById('sup-modal-title').textContent='Edit Supplier';
+  document.getElementById('sup-name').value=s.name||'';
+  document.getElementById('sup-contact').value=s.contact||'';
+  document.getElementById('sup-platform').value=s.platform||'WeChat';
+  document.getElementById('sup-desc').value=s.description||s.desc||'';
+  setStarPick(s.stars||0);
   document.getElementById('sup-overlay').classList.add('open');
-  document.getElementById('sup-name').focus();
 }
-
-function deleteSupplier(btn) {
-  var id = btn.getAttribute('data-id');
-  if (!confirm('Delete this supplier?')) return;
-  suppliers = suppliers.filter(function(s) { return s.id !== id; });
-  saveSuppliers();
-  renderSuppliers();
+function deleteSupplier(btn){
+  var id=btn.getAttribute('data-id');
+  if(!confirm('Delete this supplier?'))return;
+  suppliers=suppliers.filter(function(s){return s.id!==id;});
+  saveSuppliers(); renderSuppliers();
 }
-
-function closeSupModal() { document.getElementById('sup-overlay').classList.remove('open'); }
-function closeSupModalBg(e) { if (e.target === document.getElementById('sup-overlay')) closeSupModal(); }
-
-function saveSupplier() {
-  var name = document.getElementById('sup-name').value.trim();
-  if (!name) {
-    document.getElementById('sup-name').focus();
-    document.getElementById('sup-name').style.borderColor = '#ef4444';
-    setTimeout(function(){ document.getElementById('sup-name').style.borderColor = ''; }, 1500);
-    return;
-  }
-  var rec = {
-    name: name,
-    contact: document.getElementById('sup-contact').value.trim(),
-    platform: document.getElementById('sup-platform').value,
-    stars: pickedStars,
-    description: document.getElementById('sup-desc').value.trim()
-  };
-  if (editSupId) {
-    for (var i = 0; i < suppliers.length; i++) {
-      if (suppliers[i].id === editSupId) {
-        suppliers[i] = Object.assign({}, suppliers[i], rec);
-        break;
-      }
-    }
-  } else {
-    rec.id = Date.now().toString(36) + Math.random().toString(36).slice(2);
-    rec.created_at = new Date().toISOString();
+function closeSupModal(){document.getElementById('sup-overlay').classList.remove('open');}
+function closeSupModalBg(e){if(e.target===document.getElementById('sup-overlay'))closeSupModal();}
+function saveSupplier(){
+  var name=document.getElementById('sup-name').value.trim();
+  if(!name){document.getElementById('sup-name').focus();document.getElementById('sup-name').style.borderColor='#ef4444';setTimeout(function(){document.getElementById('sup-name').style.borderColor='';},1500);return;}
+  var rec={name:name,contact:document.getElementById('sup-contact').value.trim(),platform:document.getElementById('sup-platform').value,stars:pickedStars,description:document.getElementById('sup-desc').value.trim()};
+  if(editSupId){
+    for(var i=0;i<suppliers.length;i++){if(suppliers[i].id===editSupId){suppliers[i]=Object.assign({},suppliers[i],rec);break;}}
+  }else{
+    rec.id=Date.now().toString(36)+Math.random().toString(36).slice(2);
+    rec.created_at=new Date().toISOString();
     suppliers.push(rec);
   }
-  saveSuppliers();
-  closeSupModal();
-  renderSuppliers();
+  saveSuppliers(); closeSupModal(); renderSuppliers();
 }
 
 async function init(){
