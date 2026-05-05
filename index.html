@@ -17,7 +17,7 @@
   --badge-supplier-bg:#14532d; --badge-supplier-text:#86efac;
   --badge-home-bg:#1e3a5f;     --badge-home-text:#60a5fa;
   --badge-buyer-bg:#451a03;    --badge-buyer-text:#fbbf24;
-  --badge-sold-bg:#ff4a4a;     --badge-sold-text:#ffffff;
+  --badge-sold-bg:#14532d;     --badge-sold-text:#22c55e;
   --badge-dispute-bg:#7f1d1d;  --badge-dispute-text:#f87171;
   --badge-damaged-bg:#262626;  --badge-damaged-text:#aaaaaa;
 }
@@ -179,37 +179,118 @@ input[type="color"]::-webkit-color-swatch { border-radius:4px; border:none; }
 .btn-reset { font-size:11px; height:26px; padding:0 10px; color:var(--text3); border-color:var(--border); }
 .btn-reset:hover { color:var(--red); border-color:var(--red); }
 
-/* ════ SUPPLIERS ════ */
-.sup-area { flex:1; overflow-y:auto; padding:28px; }
-.sup-area::-webkit-scrollbar{width:6px;} .sup-area::-webkit-scrollbar-track{background:transparent;} .sup-area::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
-.sup-hdr { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:24px; }
-.sup-hdr-text h2 { font-size:22px; font-weight:700; margin-bottom:4px; }
-.sup-hdr-text p  { font-size:13px; color:var(--text3); }
-.sup-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:14px; }
-.sup-card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius-lg); padding:18px 20px 16px; transition:border-color .15s,box-shadow .15s; }
-.sup-card:hover { border-color:var(--border3); box-shadow:0 4px 20px rgba(0,0,0,.18); }
-[data-theme="light"] .sup-card:hover { box-shadow:0 4px 14px rgba(0,0,0,.08); }
-.sup-card-top { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:10px; }
-.sup-name { font-size:15px; font-weight:700; margin-bottom:5px; }
-.sup-badge { display:inline-flex; align-items:center; gap:5px; padding:2px 9px; border-radius:20px; font-size:11px; font-weight:700; }
-.sup-badge-wechat   { background:#1a4731; color:#22c55e; }
-.sup-badge-whatsapp { background:#14532d; color:#4ade80; }
-[data-theme="light"] .sup-badge-wechat   { background:#dcfce7; color:#15803d; }
-[data-theme="light"] .sup-badge-whatsapp { background:#bbf7d0; color:#166534; }
-.sup-stars { display:flex; gap:2px; }
-.sup-star { font-size:16px; line-height:1; }
-.sup-actions { display:flex; gap:4px; }
-.sup-contact { display:flex; align-items:center; gap:6px; margin-top:8px; font-size:12px; color:var(--text3); }
-.sup-contact span { color:var(--text2); font-weight:500; }
-.sup-desc { font-size:13px; color:var(--text2); line-height:1.5; margin-top:8px; }
-.sup-empty { text-align:center; padding:60px 20px; color:var(--text3); }
-.sup-empty-icon { font-size:40px; margin-bottom:12px; }
-.sup-empty p { font-size:14px; margin-bottom:6px; color:var(--text2); }
-.sup-empty small { font-size:12px; }
-.star-picker { display:flex; gap:4px; }
-.star-pick { font-size:22px; cursor:pointer; opacity:.3; transition:transform .1s; user-select:none; }
-.star-pick.on { opacity:1; }
-.star-pick:hover { transform:scale(1.15); }
+/* ════════════════════════════════════════
+   MOBILE — bottom nav + responsive layout
+════════════════════════════════════════ */
+
+/* Mobile inventory cards (hidden on desktop) */
+.mob-cards { display:none; flex-direction:column; gap:10px; padding:14px 14px 80px; }
+.mob-card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius-lg); padding:14px; }
+.mob-card-top { display:flex; align-items:flex-start; justify-content:space-between; gap:8px; margin-bottom:8px; }
+.mob-card-name { font-size:14px; font-weight:600; color:var(--text); line-height:1.3; flex:1; }
+.mob-card-actions { display:flex; gap:4px; flex-shrink:0; }
+.mob-card-row { display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:6px; }
+.mob-card-money { font-size:13px; color:var(--text2); }
+.mob-card-money strong { color:var(--text); font-weight:600; }
+.mob-card-profit-pos { font-size:13px; font-weight:700; color:var(--green); }
+.mob-card-profit-neg { font-size:13px; font-weight:700; color:var(--red); }
+.mob-card-tracking { font-size:11px; color:var(--blue); font-family:monospace; }
+.mob-card-notes { font-size:12px; color:var(--text3); margin-top:4px; line-height:1.4; }
+.mob-empty { text-align:center; padding:60px 20px; color:var(--text3); }
+.mob-empty-icon { font-size:36px; margin-bottom:10px; }
+.mob-empty p { font-size:14px; margin-bottom:4px; color:var(--text2); }
+.mob-empty small { font-size:12px; }
+
+/* FAB — floating add button on mobile */
+.fab { display:none; position:fixed; bottom:72px; right:18px; width:52px; height:52px; border-radius:50%; background:var(--green); border:none; color:#fff; font-size:26px; font-weight:300; cursor:pointer; box-shadow:0 4px 16px rgba(34,197,94,.4); z-index:200; align-items:center; justify-content:center; transition:transform .15s,box-shadow .15s; }
+.fab:active { transform:scale(.93); }
+[data-theme="light"] .fab { color:#fff; }
+
+/* Bottom nav */
+.bottom-nav { display:none; position:fixed; bottom:0; left:0; right:0; height:60px; background:var(--bg2); border-top:1px solid var(--border); z-index:300; flex-shrink:0; }
+.bottom-nav-inner { display:flex; height:100%; }
+.bnav-tab { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; border:none; background:none; cursor:pointer; color:var(--text3); transition:color .15s; padding:0; -webkit-tap-highlight-color:transparent; }
+.bnav-tab.active { color:var(--green); }
+.bnav-icon { font-size:20px; line-height:1; }
+.bnav-label { font-size:10px; font-weight:600; letter-spacing:.2px; }
+
+@media (max-width: 768px) {
+  /* ── Body ── */
+  body { padding-bottom:60px; }
+
+  /* ── Top nav: compress to logo + title only ── */
+  .topnav { padding:0 14px; height:52px; }
+  .nav-tabs { display:none; }
+  .nav-actions { display:none; }
+  .nav-logo-name { font-size:14px; }
+
+  /* ── Stats bar: horizontal scroll ── */
+  .stats-bar { overflow-x:auto; height:auto; min-height:56px; -webkit-overflow-scrolling:touch; }
+  .stats-bar::-webkit-scrollbar { display:none; }
+  .sstat { min-width:100px; padding:10px 14px; flex-shrink:0; flex:none; }
+  .sstat-lbl { font-size:9px; }
+  .sstat-val { font-size:14px; }
+  .sbar-chips { gap:4px; padding:8px 10px; }
+  .chip { font-size:10px; padding:3px 7px; }
+
+  /* ── Dashboard cards: 2 columns ── */
+  .cards-grid { grid-template-columns:1fr 1fr; gap:10px; }
+  .card-value { font-size:22px; }
+  .card-chart { height:70px; }
+  .dash-area { padding:14px 14px 80px; }
+
+  /* ── Recent sales table: horizontal scroll ── */
+  .recent-box { overflow-x:auto; }
+  .recent-box table { min-width:480px; }
+
+  /* ── Inventory toolbar: stack ── */
+  .toolbar { flex-wrap:wrap; padding:10px 14px; gap:8px; }
+  #search { min-width:0; width:100%; }
+  .toolbar select { flex:1; }
+  .item-count { width:100%; text-align:right; }
+
+  /* ── Desktop table: hide on mobile ── */
+  .table-area { display:none; }
+
+  /* ── Mobile cards: show ── */
+  .mob-cards { display:flex; }
+
+  /* ── FAB ── */
+  .fab { display:flex; }
+
+  /* ── Bottom nav ── */
+  .bottom-nav { display:block; }
+
+  /* ── Modals: full width, slide from bottom ── */
+  .modal-overlay { align-items:flex-end; }
+  .modal {
+    width:100%;
+    max-width:100%;
+    max-height:92vh;
+    border-radius:16px 16px 0 0;
+    padding:20px 18px 32px;
+    transform:translateY(100%);
+    transition:transform .25s cubic-bezier(.4,0,.2,1);
+  }
+  .modal-overlay.open .modal { transform:translateY(0); }
+
+  /* ── Settings modal slightly smaller ── */
+  .settings-modal { width:100%; }
+
+  /* ── Form rows comfortable touch size ── */
+  .form-row input, .form-row select, .form-row textarea { font-size:16px; padding:10px 12px; height:auto; }
+  .form-row textarea { height:80px; }
+  .form-row label { font-size:13px; }
+  .modal-actions .btn { height:40px; font-size:14px; flex:1; justify-content:center; }
+  .modal h2 { font-size:18px; }
+}
+
+@media (max-width: 420px) {
+  /* Single column cards on small phones */
+  .cards-grid { grid-template-columns:1fr; }
+  .card-value { font-size:26px; }
+  .card-chart { height:60px; }
+}
 </style>
 
 <script>
@@ -277,7 +358,6 @@ window.api = {
   <div class="nav-tabs">
     <button class="nav-tab active" id="tab-dashboard" onclick="switchTab('dashboard')">⊞ Dashboard</button>
     <button class="nav-tab"        id="tab-inventory" onclick="switchTab('inventory')">🏠 Inventory</button>
-    <button class="nav-tab"        id="tab-suppliers" onclick="switchTab('suppliers')">🤝 Suppliers</button>
     <button class="nav-tab"        id="tab-settings"  onclick="switchTab('settings')">⚙ Settings</button>
   </div>
   <div class="nav-actions">
@@ -367,6 +447,8 @@ window.api = {
       <div class="empty-icon">📦</div><p>No products found</p><small>Click "+ Add Product" to log your first item</small>
     </div>
   </div>
+  <!-- Mobile card list (shown instead of table on small screens) -->
+  <div class="mob-cards" id="mob-cards"></div>
 </div>
 
 <!-- ADD/EDIT MODAL -->
@@ -458,107 +540,14 @@ function closeSettingsBg(e) { if(e.target===document.getElementById('settings-ov
 function switchTab(tab) {
   if (tab==='settings') { openSettings(); return; }
   currentTab = tab;
-  ['dashboard','inventory','suppliers'].forEach(function(t){
-    document.getElementById('tab-'+t).classList.toggle('active', t===tab);
-    document.getElementById('view-'+t).classList.toggle('active', t===tab);
-  });
+  ['dashboard','inventory'].forEach(function(t){ document.getElementById('tab-'+t).classList.toggle('active',t===tab); document.getElementById('view-'+t).classList.toggle('active',t===tab); });
   document.getElementById('tab-settings').classList.remove('active');
+  // Sync bottom nav
+  ['dashboard','inventory','suppliers','settings'].forEach(function(t){
+    var el=document.getElementById('bnav-'+t); if(el) el.classList.toggle('active',t===tab);
+  });
   if (tab==='inventory') { document.getElementById('status-filter').value=''; activeChip=null; setChipActive(null); renderTable(); }
   if (tab==='dashboard') { buildCharts(); renderRecent(); }
-  if (tab==='suppliers') { renderSuppliers(); }
-}
-
-// ════ SUPPLIERS ════
-var suppliers = [];
-var editSupId = null;
-var pickedStars = 0;
-
-async function loadSuppliers() {
-  try { var r=await fetch('/api/suppliers'); suppliers=await r.json(); } catch(e) { suppliers=[]; }
-}
-
-function saveSuppliers() {
-  fetch('/api/suppliers', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify(suppliers)
-  }).catch(function(e){ console.error('Suppliers save error',e); });
-}
-
-function renderSuppliers() {
-  var grid=document.getElementById('sup-grid'), empty=document.getElementById('sup-empty');
-  if (!suppliers || suppliers.length===0) { grid.innerHTML=''; empty.style.display=''; return; }
-  empty.style.display='none';
-  grid.innerHTML=suppliers.map(function(s){
-    var stars=''; for(var i=1;i<=5;i++) stars+='<span class="sup-star" style="color:'+(i<=(s.stars||0)?'#fbbf24':'var(--border3)')+'">★</span>';
-    var pb=s.platform==='WhatsApp'?'<span class="sup-badge sup-badge-whatsapp">📱 WhatsApp</span>':'<span class="sup-badge sup-badge-wechat">💬 WeChat</span>';
-    return '<div class="sup-card">'
-      +'<div class="sup-card-top">'
-      +'<div><div class="sup-name">'+esc(s.name)+'</div>'+pb+'</div>'
-      +'<div style="display:flex;align-items:center;gap:10px">'
-      +'<div class="sup-stars">'+stars+'</div>'
-      +'<div class="sup-actions">'
-      +'<button class="act-btn" onclick="editSupplier(\''+s.id+'\')" title="Edit">✏</button>'
-      +'<button class="act-btn del" onclick="deleteSupplier(\''+s.id+'\')" title="Delete">✕</button>'
-      +'</div></div></div>'
-      +(s.contact?'<div class="sup-contact">📞 <span>'+esc(s.contact)+'</span></div>':'')
-      +(s.description?'<div class="sup-desc">'+esc(s.description)+'</div>':'')
-      +'</div>';
-  }).join('');
-}
-
-function setStarPick(n) {
-  pickedStars=n;
-  document.querySelectorAll('.star-pick').forEach(function(el){ el.classList.toggle('on', parseInt(el.getAttribute('data-v'))<=n); });
-}
-
-function openSupModal() {
-  editSupId=null;
-  document.getElementById('sup-modal-title').textContent='Add Supplier';
-  document.getElementById('sup-name').value='';
-  document.getElementById('sup-contact').value='';
-  document.getElementById('sup-platform').value='WeChat';
-  document.getElementById('sup-desc').value='';
-  setStarPick(0);
-  document.getElementById('sup-overlay').classList.add('open');
-  document.getElementById('sup-name').focus();
-}
-
-function editSupplier(id) {
-  var s=null; for(var i=0;i<suppliers.length;i++){if(suppliers[i].id===id){s=suppliers[i];break;}}
-  if(!s) return;
-  editSupId=id;
-  document.getElementById('sup-modal-title').textContent='Edit Supplier';
-  document.getElementById('sup-name').value=s.name||'';
-  document.getElementById('sup-contact').value=s.contact||'';
-  document.getElementById('sup-platform').value=s.platform||'WeChat';
-  document.getElementById('sup-desc').value=s.description||'';
-  setStarPick(s.stars||0);
-  document.getElementById('sup-overlay').classList.add('open');
-  document.getElementById('sup-name').focus();
-}
-
-function closeSupModal() { document.getElementById('sup-overlay').classList.remove('open'); }
-function closeSupModalBg(e) { if(e.target===document.getElementById('sup-overlay')) closeSupModal(); }
-
-function saveSupplier() {
-  var name=document.getElementById('sup-name').value.trim();
-  if(!name){ document.getElementById('sup-name').focus(); document.getElementById('sup-name').style.borderColor='#ef4444'; setTimeout(function(){document.getElementById('sup-name').style.borderColor='';},1500); return; }
-  var rec={ name:name, contact:document.getElementById('sup-contact').value.trim(), platform:document.getElementById('sup-platform').value, stars:pickedStars, description:document.getElementById('sup-desc').value.trim() };
-  if(editSupId){
-    for(var i=0;i<suppliers.length;i++){if(suppliers[i].id===editSupId){suppliers[i]=Object.assign({},suppliers[i],rec);break;}}
-  } else {
-    rec.id=Date.now().toString(36)+Math.random().toString(36).slice(2);
-    rec.created_at=new Date().toISOString();
-    suppliers.push(rec);
-  }
-  saveSuppliers(); closeSupModal(); renderSuppliers();
-}
-
-function deleteSupplier(id) {
-  if(!confirm('Delete this supplier?')) return;
-  suppliers=suppliers.filter(function(s){return s.id!==id;});
-  saveSuppliers(); renderSuppliers();
 }
 
 function chipFilter(status) {
@@ -690,9 +679,57 @@ function renderTable() {
   if(filtered.length===0){ tbody.innerHTML=''; empty.style.display=''; empty.querySelector('p').textContent=items.length===0?'No products yet':'No products match your search'; empty.querySelector('small').textContent=items.length===0?'Click "+ Add Product" to log your first item':'Try clearing your search or filter'; return; }
   empty.style.display='none';
   tbody.innerHTML=filtered.map(function(i){ var c=parseFloat(i.cost)||0,s=parseFloat(i.sold)||0; var ph=hasSold(i)?'<span class="'+(s-c>=0?'profit-pos':'profit-neg')+'">$'+(s-c).toFixed(2)+'</span>':'<span class="profit-none">—</span>'; var url=detectCarrier(i.tracking),cr=carrierName(i.tracking),th='—'; if(i.tracking){var sh=i.tracking.length>12?'…'+i.tracking.slice(-10):i.tracking; th=url?'<a class="tracking-link" href="#" onclick="openLink(\''+url+'\');return false;" title="'+i.tracking+'">'+(cr?cr+' ':'')+sh+'</a>':'<span class="tracking-plain" title="'+i.tracking+'">'+i.tracking+'</span>';} return '<tr><td class="name" title="'+esc(i.name)+'">'+esc(i.name)+'</td><td class="money">'+(c>0?'$'+c.toFixed(2):'—')+'</td><td class="money">'+(hasSold(i)?'$'+s.toFixed(2):'—')+'</td><td>'+badge(i.status)+'</td><td>'+th+'</td><td class="notes" title="'+esc(i.notes||'')+'">'+(esc(i.notes||'')||'—')+'</td><td>'+ph+'</td><td class="actions"><button class="act-btn" onclick="editItem(\''+i.id+'\')" title="Edit">✏</button><button class="act-btn del" onclick="deleteItem(\''+i.id+'\')" title="Delete">✕</button></td></tr>'; }).join('');
+  renderMobileCards(filtered);
 }
 
 function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ── Mobile card renderer ───────────────────────────────────────────────────
+function renderMobileCards(filtered) {
+  var el = document.getElementById('mob-cards');
+  if (!el) return;
+  if (filtered.length === 0) {
+    el.innerHTML = '<div class="mob-empty"><div class="mob-empty-icon">📦</div>'
+      + '<p>'+(items.length===0?'No products yet':'Nothing matches')+'</p>'
+      + '<small>'+(items.length===0?'Tap + to add your first item':'Try clearing filters')+'</small></div>';
+    return;
+  }
+  el.innerHTML = filtered.map(function(i) {
+    var c=parseFloat(i.cost)||0, s=parseFloat(i.sold)||0;
+    var hasSoldVal = hasSold(i);
+    var profitHtml = hasSoldVal
+      ? '<span class="'+(s-c>=0?'mob-card-profit-pos':'mob-card-profit-neg')+'">'+(s-c>=0?'+':'')+' $'+(s-c).toFixed(2)+'</span>'
+      : '';
+    var url=detectCarrier(i.tracking), cr=carrierName(i.tracking);
+    var trackHtml='';
+    if(i.tracking){
+      var short=i.tracking.length>14?'…'+i.tracking.slice(-12):i.tracking;
+      trackHtml = url
+        ? '<a class="mob-card-tracking" href="'+url+'" target="_blank">'+(cr?cr+' ':'')+short+'</a>'
+        : '<span class="mob-card-tracking" style="color:var(--text3)">'+esc(i.tracking)+'</span>';
+    }
+    var bdgMap={'Pending':'badge-pending','Shipped by Supplier':'badge-supplier','Delivered at Home':'badge-home','Shipped to Buyer':'badge-buyer','SOLD':'badge-sold','DISPUTE':'badge-dispute','DAMAGED':'badge-damaged'};
+    return '<div class="mob-card">'
+      +'<div class="mob-card-top">'
+      +  '<div class="mob-card-name">'+esc(i.name)+'</div>'
+      +  '<div class="mob-card-actions">'
+      +    '<button class="act-btn" onclick="editItem(\''+i.id+'\')" title="Edit">✏</button>'
+      +    '<button class="act-btn del" onclick="deleteItem(\''+i.id+'\')" title="Delete">✕</button>'
+      +  '</div>'
+      +'</div>'
+      +'<div class="mob-card-row">'
+      +  '<span class="badge '+(bdgMap[i.status]||'badge-pending')+'">'+i.status+'</span>'
+      +  profitHtml
+      +'</div>'
+      +'<div class="mob-card-row">'
+      +  (c>0?'<span class="mob-card-money">Cost <strong>$'+c.toFixed(2)+'</strong></span>':'')
+      +  (hasSoldVal?'<span class="mob-card-money">Sold <strong>$'+s.toFixed(2)+'</strong></span>':'')
+      +'</div>'
+      +(trackHtml?'<div class="mob-card-row">'+trackHtml+'</div>':'')
+      +(i.notes?'<div class="mob-card-notes">'+esc(i.notes)+'</div>':'')
+      +'</div>';
+  }).join('');
+}
 
 function openAddModal(){ editId=null; document.getElementById('modal-title').textContent='Add Product'; ['f-name','f-cost','f-sold','f-tracking','f-notes'].forEach(function(id){document.getElementById(id).value='';}); document.getElementById('f-status').value='Pending'; document.getElementById('f-qty').value='1'; document.getElementById('qty-row').style.display=''; document.getElementById('save-btn').textContent='Save'; document.getElementById('modal-overlay').classList.add('open'); document.getElementById('f-name').focus(); }
 function editItem(id){ var item=null; for(var i=0;i<items.length;i++){if(items[i].id===id){item=items[i];break;}} if(!item)return; editId=id; document.getElementById('modal-title').textContent='Edit Product'; document.getElementById('f-name').value=item.name||''; document.getElementById('f-cost').value=item.cost||''; document.getElementById('f-sold').value=item.sold||''; document.getElementById('f-status').value=item.status||'Pending'; document.getElementById('f-tracking').value=item.tracking||''; document.getElementById('f-notes').value=item.notes||''; document.getElementById('qty-row').style.display='none'; document.getElementById('save-btn').textContent='Save'; document.getElementById('modal-overlay').classList.add('open'); document.getElementById('f-name').focus(); }
@@ -798,7 +835,6 @@ async function exportCSV(){
 
 async function init(){
   loadSettings();
-  await loadSuppliers();
   items=await window.api.loadData();
   updateStats();
   renderTable();
@@ -807,45 +843,28 @@ async function init(){
 }
 init();
 </script>
-<!-- SUPPLIERS VIEW -->
-<div class="view" id="view-suppliers">
-  <div class="sup-area">
-    <div class="sup-hdr">
-      <div class="sup-hdr-text"><h2>Suppliers</h2><p>Manage your supplier relationships</p></div>
-      <button class="btn btn-primary" onclick="openSupModal()">+ Add Supplier</button>
-    </div>
-    <div class="sup-grid" id="sup-grid"></div>
-    <div id="sup-empty" class="sup-empty" style="display:none">
-      <div class="sup-empty-icon">🤝</div>
-      <p>No suppliers yet</p>
-      <small>Click "+ Add Supplier" to add your first one</small>
-    </div>
-  </div>
-</div>
+<!-- FAB (mobile add button) -->
+<button class="fab" onclick="openAddModal()" title="Add Product">+</button>
 
-<!-- SUPPLIER MODAL -->
-<div class="modal-overlay" id="sup-overlay" onclick="closeSupModalBg(event)">
-  <div class="modal">
-    <h2 id="sup-modal-title">Add Supplier</h2>
-    <div class="form-row"><label>Supplier Name *</label><input id="sup-name" placeholder="e.g. Lulu Alice" autocomplete="off"></div>
-    <div class="form-row"><label>Contact (username / number)</label><input id="sup-contact" placeholder="e.g. @lulualice or +1 555 0000" autocomplete="off"></div>
-    <div class="form-row"><label>Platform</label>
-      <select id="sup-platform"><option value="WeChat">💬 WeChat</option><option value="WhatsApp">📱 WhatsApp</option></select>
-    </div>
-    <div class="form-row"><label>Rating</label>
-      <div class="star-picker">
-        <span class="star-pick" data-v="1" onclick="setStarPick(1)">★</span>
-        <span class="star-pick" data-v="2" onclick="setStarPick(2)">★</span>
-        <span class="star-pick" data-v="3" onclick="setStarPick(3)">★</span>
-        <span class="star-pick" data-v="4" onclick="setStarPick(4)">★</span>
-        <span class="star-pick" data-v="5" onclick="setStarPick(5)">★</span>
-      </div>
-    </div>
-    <div class="form-row"><label>Description / Notes</label><textarea id="sup-desc" placeholder="e.g. Reliable, ships fast, good quality..."></textarea></div>
-    <div class="modal-actions">
-      <button class="btn" onclick="closeSupModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveSupplier()">Save</button>
-    </div>
+<!-- BOTTOM NAV (mobile) -->
+<div class="bottom-nav">
+  <div class="bottom-nav-inner">
+    <button class="bnav-tab active" id="bnav-dashboard" onclick="switchTab('dashboard')">
+      <span class="bnav-icon">⊞</span>
+      <span class="bnav-label">Dashboard</span>
+    </button>
+    <button class="bnav-tab" id="bnav-inventory" onclick="switchTab('inventory')">
+      <span class="bnav-icon">📦</span>
+      <span class="bnav-label">Inventory</span>
+    </button>
+    <button class="bnav-tab" id="bnav-suppliers" onclick="switchTab('suppliers')">
+      <span class="bnav-icon">🤝</span>
+      <span class="bnav-label">Suppliers</span>
+    </button>
+    <button class="bnav-tab" id="bnav-settings" onclick="switchTab('settings')">
+      <span class="bnav-icon">⚙</span>
+      <span class="bnav-label">Settings</span>
+    </button>
   </div>
 </div>
 
