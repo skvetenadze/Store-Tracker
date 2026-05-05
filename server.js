@@ -62,3 +62,7 @@ initDB().then(() => {
     console.log("Server running on port " + PORT);
   });
 });
+
+await pool.query(`
+  ALTER TABLE items ADD COLUMN IF NOT EXISTS updatedAt TEXT;
+`);
