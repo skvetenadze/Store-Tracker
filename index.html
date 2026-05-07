@@ -305,6 +305,79 @@ input[type="color"]::-webkit-color-swatch { border-radius:4px; border:none; }
 .star-pick { font-size:22px; cursor:pointer; opacity:.3; transition:transform .1s; user-select:none; }
 .star-pick.on { opacity:1; }
 .star-pick:hover { transform:scale(1.15); }
+
+/* ════ BULK SELECT ════ */
+/* Checkbox styling */
+.row-check {
+  width:16px; height:16px; cursor:pointer; accent-color:var(--green);
+  flex-shrink:0;
+}
+th.col-check, td.col-check {
+  width:36px; padding:9px 8px 9px 16px;
+}
+tbody tr.selected { background:rgba(34,197,94,0.07) !important; }
+[data-theme="light"] tbody tr.selected { background:rgba(22,163,74,0.08) !important; }
+
+/* Bulk action bar */
+.bulk-bar {
+  position:fixed; bottom:0; left:0; right:0;
+  background:var(--bg2);
+  border-top:2px solid var(--green);
+  padding:12px 20px;
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  z-index:400;
+  transform:translateY(100%);
+  transition:transform .2s cubic-bezier(.4,0,.2,1);
+}
+.bulk-bar.visible { transform:translateY(0); }
+.bulk-count {
+  font-size:13px; font-weight:700; color:var(--green);
+  margin-right:6px; white-space:nowrap;
+}
+.bulk-divider {
+  width:1px; height:24px; background:var(--border2); flex-shrink:0;
+}
+.bulk-label {
+  font-size:12px; color:var(--text3); white-space:nowrap;
+}
+.bulk-select {
+  background:var(--bg3); border:1px solid var(--border2);
+  border-radius:var(--radius); color:var(--text);
+  font-size:12px; padding:0 10px; height:32px;
+  font-family:inherit; outline:none; cursor:pointer;
+}
+.bulk-input {
+  background:var(--bg3); border:1px solid var(--border2);
+  border-radius:var(--radius); color:var(--text);
+  font-size:12px; padding:0 10px; height:32px;
+  width:90px; font-family:inherit; outline:none;
+}
+.bulk-input::placeholder { color:var(--text3); }
+.bulk-apply {
+  height:32px; padding:0 14px; border-radius:var(--radius);
+  font-size:12px; font-weight:700; cursor:pointer;
+  border:none; background:var(--green); color:#fff;
+  transition:opacity .15s;
+}
+[data-theme="light"] .bulk-apply { color:#fff; }
+.bulk-apply:hover { opacity:.85; }
+.bulk-apply.danger { background:var(--red); }
+.bulk-deselect {
+  height:32px; padding:0 12px; border-radius:var(--radius);
+  font-size:12px; font-weight:600; cursor:pointer;
+  border:1px solid var(--border2); background:none;
+  color:var(--text3); margin-left:auto;
+  transition:color .15s, border-color .15s;
+}
+.bulk-deselect:hover { color:var(--text); border-color:var(--border3); }
+
+@media (max-width:768px) {
+  .bulk-bar { padding:10px 14px; gap:8px; bottom:60px; }
+  .bulk-input { width:70px; }
+  /* Bulk select — desktop only */
+  .bulk-bar { display:none !important; }
+  th.col-check, td.col-check { display:none; }
+}
 </style>
 
 <script>
@@ -319,8 +392,11 @@ window.api = {
   }
 },
   saveData: async function (items) {
-    // UI updates instantly — actual Postgres sync happens every 10 seconds
-    markDirty();
+    await fetch("/api/items", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(items)
+});
     return true;
   },
   openLink: async function (url) {
@@ -449,6 +525,7 @@ window.api = {
   <div class="table-area">
     <table>
       <thead><tr>
+        <th class="col-check"><input type="checkbox" class="row-check" id="check-all" onclick="toggleSelectAll(this)"></th>
         <th style="width:220px">Product</th><th style="width:90px">Cost $</th><th style="width:90px">Sold $</th>
         <th style="width:165px">Status</th><th style="width:155px">Tracking</th><th>Notes</th>
         <th style="width:90px">Profit</th><th style="width:70px"></th>
@@ -897,7 +974,7 @@ async function importCSV(){
   var added=0;
   function parseRow(row){var cols=[],cur='',inQ=false;for(var i=0;i<row.length;i++){var ch=row[i];if(ch==='"'){if(inQ&&row[i+1]==='"'){cur+='"';i++;}else inQ=!inQ;}else if(ch===','&&!inQ){cols.push(cur);cur='';}else cur+=ch;}cols.push(cur);return cols;}
   for(var i=1;i<lines.length;i++){if(!lines[i].trim())continue;var cols=parseRow(lines[i]);var name=cm.name>=0?(cols[cm.name]||'').trim():'';if(!name)continue;items.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2)+i,name:name,cost:cm.cost>=0?(cols[cm.cost]||'').replace(/[^0-9.]/g,''):'',sold:cm.sold>=0?(cols[cm.sold]||'').replace(/[^0-9.]/g,''):'',status:normS(cm.status>=0?cols[cm.status]:''),tracking:cm.tracking>=0?(cols[cm.tracking]||'').trim():'',notes:cm.notes>=0?(cols[cm.notes]||'').trim():'',updatedAt:new Date().toISOString()});added++;}
-  if(added>0){markDirty();await flushToServer();updateStats();renderTable();if(currentTab==='dashboard'){buildCharts();renderRecent();}alert('Imported '+added+' products.');}else{alert('No valid rows found.');}
+  if(added>0){await window.api.saveData(items);updateStats();renderTable();if(currentTab==='dashboard'){buildCharts();renderRecent();}alert('Imported '+added+' products.');}else{alert('No valid rows found.');}
 }
 async function exportCSV(){
   var rows=[['Product','Cost','Sold','Status','Tracking','Notes','Profit']];
@@ -992,47 +1069,113 @@ function saveSupplier(){
 }
 
 
-// ════ BACKGROUND SYNC — saves to Postgres every 10 seconds if data changed ════
-var syncDirty = false;
-var syncTimer = null;
+// ════ BULK SELECT ════
+var selectedIds = new Set();
 
-function markDirty() {
-  syncDirty = true;
-}
-
-async function flushToServer() {
-  if (!syncDirty) return;
-  syncDirty = false;
-  try {
-    await fetch('/api/items', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(items)
-    });
-  } catch(e) {
-    // If it fails, mark dirty again so it retries next tick
-    syncDirty = true;
-    console.error('Sync error:', e);
+function updateBulkBar() {
+  var bar = document.getElementById('bulk-bar');
+  var cnt = document.getElementById('bulk-count');
+  var n = selectedIds.size;
+  if (n > 0) {
+    bar.classList.add('visible');
+    cnt.textContent = n + ' selected';
+  } else {
+    bar.classList.remove('visible');
   }
+  // Sync select-all checkbox state
+  var allBox = document.getElementById('check-all');
+  if (!allBox) return;
+  var allChecked = document.querySelectorAll('#tbody .row-check');
+  if (allChecked.length === 0) { allBox.indeterminate = false; allBox.checked = false; return; }
+  var checkedCount = Array.from(allChecked).filter(function(c){ return c.checked; }).length;
+  if (checkedCount === 0) { allBox.indeterminate = false; allBox.checked = false; }
+  else if (checkedCount === allChecked.length) { allBox.indeterminate = false; allBox.checked = true; }
+  else { allBox.indeterminate = true; allBox.checked = false; }
 }
 
-function startSyncTimer() {
-  syncTimer = setInterval(flushToServer, 10000);
+function toggleRow(id, checked) {
+  if (checked) selectedIds.add(id);
+  else selectedIds.delete(id);
+  var row = document.querySelector('tr[data-id="'+id+'"]');
+  if (row) row.classList.toggle('selected', checked);
+  updateBulkBar();
 }
 
-// Flush immediately before the tab closes so no data is lost
-window.addEventListener('beforeunload', function() {
-  if (!syncDirty) return;
-  // Use sendBeacon for reliable fire-and-forget on page unload
-  var blob = new Blob([JSON.stringify(items)], { type: 'application/json' });
-  navigator.sendBeacon('/api/items', blob);
-});
+function toggleSelectAll(checkbox) {
+  var rows = document.querySelectorAll('#tbody .row-check');
+  rows.forEach(function(cb) {
+    cb.checked = checkbox.checked;
+    var id = cb.getAttribute('data-id');
+    if (checkbox.checked) selectedIds.add(id);
+    else selectedIds.delete(id);
+    var row = document.querySelector('tr[data-id="'+id+'"]');
+    if (row) row.classList.toggle('selected', checkbox.checked);
+  });
+  updateBulkBar();
+}
+
+function clearSelection() {
+  selectedIds.clear();
+  document.querySelectorAll('#tbody .row-check').forEach(function(cb){ cb.checked = false; });
+  document.querySelectorAll('#tbody tr.selected').forEach(function(r){ r.classList.remove('selected'); });
+  updateBulkBar();
+}
+
+function applyBulk() {
+  if (selectedIds.size === 0) return;
+  var newStatus   = document.getElementById('bulk-status').value;
+  var newCost     = document.getElementById('bulk-cost').value.trim();
+  var newSold     = document.getElementById('bulk-sold').value.trim();
+  var newTracking = document.getElementById('bulk-tracking').value.trim();
+
+  if (!newStatus && newCost === '' && newSold === '' && newTracking === '') {
+    alert('Please set at least one field to update.');
+    return;
+  }
+
+  var now = new Date().toISOString();
+  items.forEach(function(item) {
+    if (!selectedIds.has(item.id)) return;
+    if (newStatus)       { 
+      // Stamp sold_at when marking as SOLD
+      if (newStatus === 'SOLD' && item.status !== 'SOLD') item.sold_at = now;
+      if (newStatus !== 'SOLD') item.sold_at = null;
+      item.status = newStatus; 
+    }
+    if (newCost     !== '') item.cost     = newCost;
+    if (newSold     !== '') item.sold     = newSold;
+    if (newTracking !== '') item.tracking = newTracking;
+    item.updatedAt = now;
+  });
+
+  // Reset inputs
+  document.getElementById('bulk-status').value   = '';
+  document.getElementById('bulk-cost').value     = '';
+  document.getElementById('bulk-sold').value     = '';
+  document.getElementById('bulk-tracking').value = '';
+
+  clearSelection();
+  markDirty();
+  updateStats();
+  renderTable();
+  if (currentTab === 'dashboard') { buildCharts(); renderRecent(); }
+}
+
+function deleteBulk() {
+  if (selectedIds.size === 0) return;
+  if (!confirm('Delete ' + selectedIds.size + ' items? This cannot be undone.')) return;
+  items = items.filter(function(i){ return !selectedIds.has(i.id); });
+  clearSelection();
+  markDirty();
+  updateStats();
+  renderTable();
+  if (currentTab === 'dashboard') { buildCharts(); renderRecent(); }
+}
 
 async function init(){
   loadSettings();
   await loadSuppliers();
   items=await window.api.loadData();
-  startSyncTimer();
   updateStats();
   renderTable();
   buildCharts();
@@ -1063,6 +1206,41 @@ init();
       <span class="bnav-label">Settings</span>
     </button>
   </div>
+</div>
+
+
+<!-- BULK ACTION BAR -->
+<div class="bulk-bar" id="bulk-bar">
+  <span class="bulk-count" id="bulk-count">0 selected</span>
+  <div class="bulk-divider"></div>
+
+  <span class="bulk-label">Status</span>
+  <select class="bulk-select" id="bulk-status">
+    <option value="">— no change —</option>
+    <option>Pending</option>
+    <option>Shipped by Supplier</option>
+    <option>Delivered at Home</option>
+    <option>Shipped to Buyer</option>
+    <option>SOLD</option>
+    <option>DISPUTE</option>
+    <option>DAMAGED</option>
+  </select>
+
+  <div class="bulk-divider"></div>
+  <span class="bulk-label">Cost $</span>
+  <input class="bulk-input" id="bulk-cost" type="number" step="0.01" min="0" placeholder="e.g. 9.99">
+
+  <div class="bulk-divider"></div>
+  <span class="bulk-label">Sold $</span>
+  <input class="bulk-input" id="bulk-sold" type="number" step="0.01" min="0" placeholder="e.g. 49.99">
+
+  <div class="bulk-divider"></div>
+  <span class="bulk-label">Tracking</span>
+  <input class="bulk-input" id="bulk-tracking" type="text" placeholder="tracking #" style="width:120px">
+
+  <button class="bulk-apply" onclick="applyBulk()">Apply</button>
+  <button class="bulk-apply danger" onclick="deleteBulk()">Delete</button>
+  <button class="bulk-deselect" onclick="clearSelection()">✕ Deselect all</button>
 </div>
 
 </body>
