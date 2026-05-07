@@ -378,6 +378,86 @@ tbody tr.selected { background:rgba(34,197,94,0.07) !important; }
   .bulk-bar { display:none !important; }
   th.col-check, td.col-check { display:none; }
 }
+
+/* ════ PIN SCREEN ════ */
+#pin-screen {
+  position:fixed; inset:0; z-index:9999;
+  background:var(--bg);
+  display:flex; align-items:center; justify-content:center;
+}
+#pin-screen.hidden { display:none; }
+
+.pin-box {
+  display:flex; flex-direction:column; align-items:center;
+  gap:0; width:100%; max-width:320px; padding:20px;
+}
+.pin-logo {
+  width:56px; height:56px; background:#1a4731; border-radius:16px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:28px; margin-bottom:20px;
+}
+[data-theme="light"] .pin-logo { background:#dcfce7; }
+.pin-title { font-size:20px; font-weight:700; color:var(--text); margin-bottom:6px; }
+.pin-sub   { font-size:13px; color:var(--text3); margin-bottom:32px; }
+
+/* 4 dots */
+.pin-dots {
+  display:flex; gap:14px; margin-bottom:36px;
+}
+.pin-dot {
+  width:16px; height:16px; border-radius:50%;
+  border:2px solid var(--border2);
+  background:transparent;
+  transition:background .15s, border-color .15s, transform .1s;
+}
+.pin-dot.filled {
+  background:var(--green); border-color:var(--green);
+  transform:scale(1.1);
+}
+.pin-dot.error {
+  background:var(--red); border-color:var(--red);
+}
+
+/* Number pad */
+.pin-pad {
+  display:grid; grid-template-columns:repeat(3,72px);
+  gap:12px;
+}
+.pin-key {
+  width:72px; height:72px; border-radius:50%;
+  border:1px solid var(--border2); background:var(--bg2);
+  color:var(--text); font-size:22px; font-weight:600;
+  cursor:pointer; transition:background .1s, transform .1s;
+  display:flex; align-items:center; justify-content:center;
+  -webkit-tap-highlight-color:transparent; user-select:none;
+}
+.pin-key:hover  { background:var(--bg3); }
+.pin-key:active { background:var(--bg4); transform:scale(.93); }
+.pin-key.empty  { border:none; background:none; cursor:default; pointer-events:none; }
+.pin-key.del    { font-size:18px; color:var(--text2); }
+
+.pin-error {
+  margin-top:20px; font-size:13px; font-weight:600;
+  color:var(--red); min-height:20px; text-align:center;
+}
+
+@keyframes pin-shake {
+  0%,100%{transform:translateX(0)}
+  20%{transform:translateX(-8px)}
+  40%{transform:translateX(8px)}
+  60%{transform:translateX(-6px)}
+  80%{transform:translateX(6px)}
+}
+.pin-dots.shake { animation:pin-shake .35s ease; }
+
+/* Lock button in nav */
+.lock-btn {
+  background:none; border:1px solid var(--border2); border-radius:8px;
+  color:var(--text3); font-size:12px; font-weight:600;
+  padding:0 12px; height:32px; cursor:pointer;
+  transition:color .15s, border-color .15s;
+}
+.lock-btn:hover { color:var(--red); border-color:var(--red); }
 </style>
 
 <script>
@@ -433,6 +513,40 @@ window.api = {
 </head>
 <body>
 
+
+<!-- PIN SCREEN -->
+<div id="pin-screen">
+  <div class="pin-box">
+    <div class="pin-logo">&#128230;</div>
+    <div class="pin-title">Resell Tracker</div>
+    <div class="pin-sub">Enter your 4-digit passcode</div>
+
+    <div class="pin-dots" id="pin-dots">
+      <div class="pin-dot" id="pd0"></div>
+      <div class="pin-dot" id="pd1"></div>
+      <div class="pin-dot" id="pd2"></div>
+      <div class="pin-dot" id="pd3"></div>
+    </div>
+
+    <div class="pin-pad">
+      <button class="pin-key" onclick="pinKey('1')">1</button>
+      <button class="pin-key" onclick="pinKey('2')">2</button>
+      <button class="pin-key" onclick="pinKey('3')">3</button>
+      <button class="pin-key" onclick="pinKey('4')">4</button>
+      <button class="pin-key" onclick="pinKey('5')">5</button>
+      <button class="pin-key" onclick="pinKey('6')">6</button>
+      <button class="pin-key" onclick="pinKey('7')">7</button>
+      <button class="pin-key" onclick="pinKey('8')">8</button>
+      <button class="pin-key" onclick="pinKey('9')">9</button>
+      <button class="pin-key empty"></button>
+      <button class="pin-key" onclick="pinKey('0')">0</button>
+      <button class="pin-key del" onclick="pinDel()">&#9003;</button>
+    </div>
+
+    <div class="pin-error" id="pin-error"></div>
+  </div>
+</div>
+
 <nav class="topnav">
   <div class="nav-logo">
     <div class="nav-logo-icon">📦</div>
@@ -445,6 +559,7 @@ window.api = {
     <button class="nav-tab"        id="tab-settings"  onclick="switchTab('settings')">⚙ Settings</button>
   </div>
   <div class="nav-actions">
+    <button class="lock-btn" onclick="doLock()" title="Lock">&#128274; Lock</button>
     <button class="btn" onclick="importCSV()">⬆ Import CSV</button>
     <button class="btn" onclick="exportCSV()">⬇ Export CSV</button>
     <button class="btn btn-primary" onclick="openAddModal()">+ Add Product</button>
@@ -1197,6 +1312,99 @@ function deleteBulk() {
   if (currentTab === 'dashboard') { buildCharts(); renderRecent(); }
 }
 
+
+// ════ PIN AUTH ════
+var pinEntry = '';
+
+async function checkPin() {
+  try {
+    var r = await fetch('/api/auth/pin-status');
+    var d = await r.json();
+    if (d.verified) {
+      document.getElementById('pin-screen').classList.add('hidden');
+    }
+    // else: stay on pin screen
+  } catch(e) {
+    // stay on pin screen on error
+  }
+}
+
+function pinKey(digit) {
+  if (pinEntry.length >= 4) return;
+  pinEntry += digit;
+  updatePinDots();
+  if (pinEntry.length === 4) submitPin();
+}
+
+function pinDel() {
+  if (pinEntry.length === 0) return;
+  pinEntry = pinEntry.slice(0, -1);
+  updatePinDots();
+  document.getElementById('pin-error').textContent = '';
+}
+
+function updatePinDots() {
+  for (var i = 0; i < 4; i++) {
+    var dot = document.getElementById('pd' + i);
+    dot.classList.toggle('filled', i < pinEntry.length);
+    dot.classList.remove('error');
+  }
+}
+
+async function submitPin() {
+  try {
+    var r = await fetch('/api/auth/pin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin: pinEntry })
+    });
+    var d = await r.json();
+    if (d.success) {
+      document.getElementById('pin-screen').classList.add('hidden');
+      await loadApp();
+    } else {
+      pinError();
+    }
+  } catch(e) {
+    pinError();
+  }
+}
+
+function pinError() {
+  pinEntry = '';
+  var dots = document.getElementById('pin-dots');
+  for (var i = 0; i < 4; i++) {
+    var dot = document.getElementById('pd' + i);
+    dot.classList.remove('filled');
+    dot.classList.add('error');
+  }
+  dots.classList.add('shake');
+  document.getElementById('pin-error').textContent = 'Incorrect passcode';
+  setTimeout(function() {
+    dots.classList.remove('shake');
+    for (var i = 0; i < 4; i++) {
+      document.getElementById('pd' + i).classList.remove('error');
+    }
+    document.getElementById('pin-error').textContent = '';
+  }, 800);
+}
+
+async function doLock() {
+  await fetch('/api/auth/lock', { method: 'POST' });
+  location.reload();
+}
+
+// Keyboard support for desktop
+document.addEventListener('keydown', function(e) {
+  var screen = document.getElementById('pin-screen');
+  if (screen && !screen.classList.contains('hidden')) {
+    if (e.key >= '0' && e.key <= '9') pinKey(e.key);
+    if (e.key === 'Backspace') pinDel();
+    return;
+  }
+  if (e.key === 'Escape') { closeModal(); closeSettings(); closeSupModal(); }
+});
+
 // ════ BACKGROUND SYNC — saves to Postgres every 10 seconds if data changed ════
 var syncDirty = false;
 
@@ -1230,15 +1438,19 @@ window.addEventListener('beforeunload', function() {
   navigator.sendBeacon('/api/items', blob);
 });
 
-async function init(){
-  loadSettings();
+async function loadApp(){
   await loadSuppliers();
-  items=await window.api.loadData();
+  items = await window.api.loadData();
   startSyncTimer();
   updateStats();
   renderTable();
   buildCharts();
   renderRecent();
+}
+
+async function init(){
+  loadSettings();
+  await checkPin();
 }
 init();
 </script>
