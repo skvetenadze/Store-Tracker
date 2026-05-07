@@ -392,11 +392,7 @@ window.api = {
   }
 },
   saveData: async function (items) {
-    await fetch("/api/items", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify(items)
-});
+    markDirty();
     return true;
   },
   openLink: async function (url) {
@@ -963,7 +959,7 @@ async function saveItem(){
     }
   }
 
-  await window.api.saveData(items);
+  markDirty();
   closeModal();
   updateStats();
   renderTable();
@@ -972,12 +968,11 @@ async function saveItem(){
     buildCharts();
     renderRecent();
   }
-  //await exportCSV();
 }
 async function deleteItem(id){
   if(!confirm('Delete this item? This cannot be undone.'))return;
   items=items.filter(function(x){return x.id!==id;});
-  await window.api.saveData(items); updateStats(); renderTable();
+  markDirty(); updateStats(); renderTable();
   if(currentTab==='dashboard'){buildCharts();renderRecent();}
 }
 function openLink(url){ window.api.openLink(url); }
@@ -992,7 +987,7 @@ async function importCSV(){
   var added=0;
   function parseRow(row){var cols=[],cur='',inQ=false;for(var i=0;i<row.length;i++){var ch=row[i];if(ch==='"'){if(inQ&&row[i+1]==='"'){cur+='"';i++;}else inQ=!inQ;}else if(ch===','&&!inQ){cols.push(cur);cur='';}else cur+=ch;}cols.push(cur);return cols;}
   for(var i=1;i<lines.length;i++){if(!lines[i].trim())continue;var cols=parseRow(lines[i]);var name=cm.name>=0?(cols[cm.name]||'').trim():'';if(!name)continue;items.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2)+i,name:name,cost:cm.cost>=0?(cols[cm.cost]||'').replace(/[^0-9.]/g,''):'',sold:cm.sold>=0?(cols[cm.sold]||'').replace(/[^0-9.]/g,''):'',status:normS(cm.status>=0?cols[cm.status]:''),tracking:cm.tracking>=0?(cols[cm.tracking]||'').trim():'',notes:cm.notes>=0?(cols[cm.notes]||'').trim():'',updatedAt:new Date().toISOString()});added++;}
-  if(added>0){await window.api.saveData(items);updateStats();renderTable();if(currentTab==='dashboard'){buildCharts();renderRecent();}alert('Imported '+added+' products.');}else{alert('No valid rows found.');}
+  if(added>0){markDirty();await flushToServer();updateStats();renderTable();if(currentTab==='dashboard'){buildCharts();renderRecent();}alert('Imported '+added+' products.');}else{alert('No valid rows found.');}
 }
 async function exportCSV(){
   var rows=[['Product','Cost','Sold','Status','Tracking','Notes','Profit']];
