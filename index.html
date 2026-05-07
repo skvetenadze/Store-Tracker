@@ -1197,10 +1197,44 @@ function deleteBulk() {
   if (currentTab === 'dashboard') { buildCharts(); renderRecent(); }
 }
 
+// ════ BACKGROUND SYNC — saves to Postgres every 10 seconds if data changed ════
+var syncDirty = false;
+
+function markDirty() {
+  syncDirty = true;
+}
+
+async function flushToServer() {
+  if (!syncDirty) return;
+  syncDirty = false;
+  try {
+    await fetch('/api/items', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(items)
+    });
+  } catch(e) {
+    syncDirty = true; // retry next tick
+    console.error('Sync error:', e);
+  }
+}
+
+function startSyncTimer() {
+  setInterval(flushToServer, 10000);
+}
+
+// Flush before tab closes so no data is lost
+window.addEventListener('beforeunload', function() {
+  if (!syncDirty) return;
+  var blob = new Blob([JSON.stringify(items)], { type: 'application/json' });
+  navigator.sendBeacon('/api/items', blob);
+});
+
 async function init(){
   loadSettings();
   await loadSuppliers();
   items=await window.api.loadData();
+  startSyncTimer();
   updateStats();
   renderTable();
   buildCharts();
