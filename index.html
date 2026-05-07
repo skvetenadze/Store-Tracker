@@ -1317,16 +1317,7 @@ function deleteBulk() {
 var pinEntry = '';
 
 async function checkPin() {
-  try {
-    var r = await fetch('/api/auth/pin-status');
-    var d = await r.json();
-    if (d.verified) {
-      document.getElementById('pin-screen').classList.add('hidden');
-    }
-    // else: stay on pin screen
-  } catch(e) {
-    // stay on pin screen on error
-  }
+  // Always show PIN screen on every page load — never skip it
 }
 
 function pinKey(digit) {
