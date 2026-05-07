@@ -1142,7 +1142,9 @@ function clearSelection() {
 }
 
 function applyBulk() {
-  if (selectedIds.size === 0) return;
+  var checked = document.querySelectorAll('#tbody .row-check:checked');
+  if (checked.length === 0) { alert('No items selected.'); return; }
+
   var newStatus   = document.getElementById('bulk-status').value;
   var newCost     = document.getElementById('bulk-cost').value.trim();
   var newSold     = document.getElementById('bulk-sold').value.trim();
@@ -1153,14 +1155,19 @@ function applyBulk() {
     return;
   }
 
+  // Build a lookup of which IDs to change from the actual DOM checkboxes
+  var ids = {};
+  Array.from(checked).forEach(function(cb) { ids[cb.getAttribute('data-id')] = true; });
+
   var now = new Date().toISOString();
+  var count = 0;
   items.forEach(function(item) {
-    if (!selectedIds.has(item.id)) return;
-    if (newStatus)       { 
-      // Stamp sold_at when marking as SOLD
+    if (!ids[item.id]) return;
+    count++;
+    if (newStatus) {
       if (newStatus === 'SOLD' && item.status !== 'SOLD') item.sold_at = now;
       if (newStatus !== 'SOLD') item.sold_at = null;
-      item.status = newStatus; 
+      item.status = newStatus;
     }
     if (newCost     !== '') item.cost     = newCost;
     if (newSold     !== '') item.sold     = newSold;
@@ -1182,9 +1189,12 @@ function applyBulk() {
 }
 
 function deleteBulk() {
-  if (selectedIds.size === 0) return;
-  if (!confirm('Delete ' + selectedIds.size + ' items? This cannot be undone.')) return;
-  items = items.filter(function(i){ return !selectedIds.has(i.id); });
+  var checked = document.querySelectorAll('#tbody .row-check:checked');
+  if (checked.length === 0) return;
+  if (!confirm('Delete ' + checked.length + ' items? This cannot be undone.')) return;
+  var ids = {};
+  Array.from(checked).forEach(function(cb) { ids[cb.getAttribute('data-id')] = true; });
+  items = items.filter(function(i){ return !ids[i.id]; });
   clearSelection();
   markDirty();
   updateStats();
