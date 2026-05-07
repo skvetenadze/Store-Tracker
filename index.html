@@ -832,7 +832,25 @@ function renderTable() {
   var tbody=document.getElementById('tbody'), empty=document.getElementById('empty-state');
   if(filtered.length===0){ tbody.innerHTML=''; empty.style.display=''; empty.querySelector('p').textContent=items.length===0?'No products yet':'No products match your search'; empty.querySelector('small').textContent=items.length===0?'Click "+ Add Product" to log your first item':'Try clearing your search or filter'; return; }
   empty.style.display='none';
-  tbody.innerHTML=filtered.map(function(i){ var c=parseFloat(i.cost)||0,s=parseFloat(i.sold)||0; var ph=hasSold(i)?'<span class="'+(s-c>=0?'profit-pos':'profit-neg')+'">$'+(s-c).toFixed(2)+'</span>':'<span class="profit-none">—</span>'; var url=detectCarrier(i.tracking),cr=carrierName(i.tracking),th='—'; if(i.tracking){var sh=i.tracking.length>12?'…'+i.tracking.slice(-10):i.tracking; th=url?'<a class="tracking-link" href="#" onclick="openLink(\''+url+'\');return false;" title="'+i.tracking+'">'+(cr?cr+' ':'')+sh+'</a>':'<span class="tracking-plain" title="'+i.tracking+'">'+i.tracking+'</span>';} return '<tr><td class="name" title="'+esc(i.name)+'">'+esc(i.name)+'</td><td class="money">'+(c>0?'$'+c.toFixed(2):'—')+'</td><td class="money">'+(hasSold(i)?'$'+s.toFixed(2):'—')+'</td><td>'+badge(i.status)+'</td><td>'+th+'</td><td class="notes" title="'+esc(i.notes||'')+'">'+(esc(i.notes||'')||'—')+'</td><td>'+ph+'</td><td class="actions"><button class="act-btn" onclick="editItem(\''+i.id+'\')" title="Edit">✏</button><button class="act-btn del" onclick="deleteItem(\''+i.id+'\')" title="Delete">✕</button></td></tr>'; }).join('');
+  tbody.innerHTML=filtered.map(function(i){
+    var c=parseFloat(i.cost)||0,s=parseFloat(i.sold)||0;
+    var ph=hasSold(i)?'<span class="'+(s-c>=0?'profit-pos':'profit-neg')+'">$'+(s-c).toFixed(2)+'</span>':'<span class="profit-none">—</span>';
+    var url=detectCarrier(i.tracking),cr=carrierName(i.tracking),th='—';
+    if(i.tracking){var sh=i.tracking.length>12?'…'+i.tracking.slice(-10):i.tracking; th=url?'<a class="tracking-link" href="#" onclick="openLink(\''+url+'\');return false;" title="'+i.tracking+'">'+(cr?cr+' ':'')+sh+'</a>':'<span class="tracking-plain" title="'+i.tracking+'">'+i.tracking+'</span>';}
+    var sel=selectedIds.has(i.id);
+    return '<tr data-id="'+i.id+'"'+(sel?' class="selected"':'')+'>'
+      +'<td class="col-check"><input type="checkbox" class="row-check" data-id="'+i.id+'"'+(sel?' checked':'')+' onclick="toggleRow(\''+i.id+'\',this.checked)"></td>'
+      +'<td class="name" title="'+esc(i.name)+'">'+esc(i.name)+'</td>'
+      +'<td class="money">'+(c>0?'$'+c.toFixed(2):'—')+'</td>'
+      +'<td class="money">'+(hasSold(i)?'$'+s.toFixed(2):'—')+'</td>'
+      +'<td>'+badge(i.status)+'</td>'
+      +'<td>'+th+'</td>'
+      +'<td class="notes" title="'+esc(i.notes||'')+'">'+(esc(i.notes||'')||'—')+'</td>'
+      +'<td>'+ph+'</td>'
+      +'<td class="actions"><button class="act-btn" onclick="editItem(\''+i.id+'\')" title="Edit">✏</button><button class="act-btn del" onclick="deleteItem(\''+i.id+'\')" title="Delete">✕</button></td>'
+      +'</tr>';
+  }).join('');
+  updateBulkBar();
   renderMobileCards(filtered);
 }
 
