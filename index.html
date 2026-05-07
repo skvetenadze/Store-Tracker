@@ -839,7 +839,7 @@ function renderTable() {
     if(i.tracking){var sh=i.tracking.length>12?'…'+i.tracking.slice(-10):i.tracking; th=url?'<a class="tracking-link" href="#" onclick="openLink(\''+url+'\');return false;" title="'+i.tracking+'">'+(cr?cr+' ':'')+sh+'</a>':'<span class="tracking-plain" title="'+i.tracking+'">'+i.tracking+'</span>';}
     var sel=selectedIds.has(i.id);
     return '<tr data-id="'+i.id+'"'+(sel?' class="selected"':'')+'>'
-      +'<td class="col-check"><input type="checkbox" class="row-check" data-id="'+i.id+'"'+(sel?' checked':'')+' onclick="toggleRow(\''+i.id+'\',this.checked)"></td>'
+      +'<td class="col-check"><input type="checkbox" class="row-check" data-id="'+i.id+'"'+(sel?' checked':'')+' onchange="toggleRow(this)"></td>'
       +'<td class="name" title="'+esc(i.name)+'">'+esc(i.name)+'</td>'
       +'<td class="money">'+(c>0?'$'+c.toFixed(2):'—')+'</td>'
       +'<td class="money">'+(hasSold(i)?'$'+s.toFixed(2):'—')+'</td>'
@@ -1111,7 +1111,9 @@ function updateBulkBar() {
   else { allBox.indeterminate = true; allBox.checked = false; }
 }
 
-function toggleRow(id, checked) {
+function toggleRow(el) {
+  var id = el.getAttribute('data-id');
+  var checked = el.checked;
   if (checked) selectedIds.add(id);
   else selectedIds.delete(id);
   var row = document.querySelector('tr[data-id="'+id+'"]');
