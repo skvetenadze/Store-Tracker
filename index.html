@@ -319,11 +319,8 @@ window.api = {
   }
 },
   saveData: async function (items) {
-    await fetch("/api/items", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify(items)
-});
+    // UI updates instantly — actual Postgres sync happens every 10 seconds
+    markDirty();
     return true;
   },
   openLink: async function (url) {
@@ -900,7 +897,7 @@ async function importCSV(){
   var added=0;
   function parseRow(row){var cols=[],cur='',inQ=false;for(var i=0;i<row.length;i++){var ch=row[i];if(ch==='"'){if(inQ&&row[i+1]==='"'){cur+='"';i++;}else inQ=!inQ;}else if(ch===','&&!inQ){cols.push(cur);cur='';}else cur+=ch;}cols.push(cur);return cols;}
   for(var i=1;i<lines.length;i++){if(!lines[i].trim())continue;var cols=parseRow(lines[i]);var name=cm.name>=0?(cols[cm.name]||'').trim():'';if(!name)continue;items.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2)+i,name:name,cost:cm.cost>=0?(cols[cm.cost]||'').replace(/[^0-9.]/g,''):'',sold:cm.sold>=0?(cols[cm.sold]||'').replace(/[^0-9.]/g,''):'',status:normS(cm.status>=0?cols[cm.status]:''),tracking:cm.tracking>=0?(cols[cm.tracking]||'').trim():'',notes:cm.notes>=0?(cols[cm.notes]||'').trim():'',updatedAt:new Date().toISOString()});added++;}
-  if(added>0){await window.api.saveData(items);updateStats();renderTable();if(currentTab==='dashboard'){buildCharts();renderRecent();}alert('Imported '+added+' products.');}else{alert('No valid rows found.');}
+  if(added>0){markDirty();await flushToServer();updateStats();renderTable();if(currentTab==='dashboard'){buildCharts();renderRecent();}alert('Imported '+added+' products.');}else{alert('No valid rows found.');}
 }
 async function exportCSV(){
   var rows=[['Product','Cost','Sold','Status','Tracking','Notes','Profit']];
@@ -994,10 +991,48 @@ function saveSupplier(){
   saveSuppliers(); closeSupModal(); renderSuppliers();
 }
 
+
+// ════ BACKGROUND SYNC — saves to Postgres every 10 seconds if data changed ════
+var syncDirty = false;
+var syncTimer = null;
+
+function markDirty() {
+  syncDirty = true;
+}
+
+async function flushToServer() {
+  if (!syncDirty) return;
+  syncDirty = false;
+  try {
+    await fetch('/api/items', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(items)
+    });
+  } catch(e) {
+    // If it fails, mark dirty again so it retries next tick
+    syncDirty = true;
+    console.error('Sync error:', e);
+  }
+}
+
+function startSyncTimer() {
+  syncTimer = setInterval(flushToServer, 10000);
+}
+
+// Flush immediately before the tab closes so no data is lost
+window.addEventListener('beforeunload', function() {
+  if (!syncDirty) return;
+  // Use sendBeacon for reliable fire-and-forget on page unload
+  var blob = new Blob([JSON.stringify(items)], { type: 'application/json' });
+  navigator.sendBeacon('/api/items', blob);
+});
+
 async function init(){
   loadSettings();
   await loadSuppliers();
   items=await window.api.loadData();
+  startSyncTimer();
   updateStats();
   renderTable();
   buildCharts();
