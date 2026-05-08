@@ -25,8 +25,10 @@ async function sendBreachAlert(ip, count) {
   try {
     const transport = nodemailer.createTransport({
       host: "smtp.gmail.com",
-      port: 465,
-      secure: true,
+      port: 587,
+      secure: false,
+      requireTLS: true,
+      connectionTimeout: 10000,
       auth: { user: from, pass: pass.replace(/\s/g, "") }
     });
 
