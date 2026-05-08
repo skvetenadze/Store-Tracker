@@ -3,7 +3,6 @@ const path = require("path");
 const pool = require("./db");
 const session = require("express-session");
 const pgSession = require("connect-pg-simple")(session);
-const nodemailer = require("nodemailer");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -11,45 +10,47 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json({ limit: "10mb" }));
 
 async function sendBreachAlert(ip, count) {
-  const from = process.env.ALERT_EMAIL_FROM;
-  const to   = process.env.ALERT_EMAIL_TO;
-  const pass = process.env.GMAIL_APP_PASSWORD;
+  const apiKey = process.env.RESEND_API_KEY;
+  const to     = process.env.ALERT_EMAIL_TO;
 
-  if (!from || !pass) {
-    console.error("⚠️  Email alert skipped — ALERT_EMAIL_FROM or GMAIL_APP_PASSWORD not set in env variables");
+  if (!apiKey) {
+    console.error("⚠️  Email alert skipped — RESEND_API_KEY not set in env variables");
     return;
   }
 
   console.log(`📧 Sending breach alert to ${to} for IP ${ip}...`);
 
   try {
-    const transport = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 587,
-      secure: false,
-      requireTLS: true,
-      connectionTimeout: 10000,
-      auth: { user: from, pass: pass.replace(/\s/g, "") }
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        from: "Resell Tracker <onboarding@resend.dev>",
+        to: [to],
+        subject: "⚠️ Resell Tracker — Wrong PIN Alert",
+        html: `
+          <div style="font-family:sans-serif;max-width:480px">
+            <h2 style="color:#ef4444">⚠️ Failed PIN Attempts</h2>
+            <p>Someone entered the wrong PIN <strong>${count} times</strong>.</p>
+            <table style="width:100%;border-collapse:collapse;margin-top:12px">
+              <tr><td style="padding:8px;color:#666">Time</td><td style="padding:8px"><strong>${new Date().toLocaleString()}</strong></td></tr>
+              <tr style="background:#f9f9f9"><td style="padding:8px;color:#666">IP Address</td><td style="padding:8px"><strong>${ip}</strong></td></tr>
+              <tr><td style="padding:8px;color:#666">Attempts</td><td style="padding:8px"><strong>${count}</strong></td></tr>
+            </table>
+            <p style="margin-top:16px;color:#666;font-size:13px">If this wasn't you, consider changing your passcode in Railway env variables.</p>
+          </div>`
+      })
     });
 
-    await transport.sendMail({
-      from,
-      to,
-      subject: "⚠️ Resell Tracker — Wrong PIN Alert",
-      html: `
-        <div style="font-family:sans-serif;max-width:480px">
-          <h2 style="color:#ef4444">⚠️ Failed PIN Attempts</h2>
-          <p>Someone entered the wrong PIN <strong>${count} times</strong>.</p>
-          <table style="width:100%;border-collapse:collapse;margin-top:12px">
-            <tr><td style="padding:8px;color:#666">Time</td><td style="padding:8px"><strong>${new Date().toLocaleString()}</strong></td></tr>
-            <tr style="background:#f9f9f9"><td style="padding:8px;color:#666">IP Address</td><td style="padding:8px"><strong>${ip}</strong></td></tr>
-            <tr><td style="padding:8px;color:#666">Attempts</td><td style="padding:8px"><strong>${count}</strong></td></tr>
-          </table>
-          <p style="margin-top:16px;color:#666;font-size:13px">If this wasn't you, consider changing your passcode in Railway env variables.</p>
-        </div>`
-    });
-
-    console.log(`✅ Alert email sent successfully to ${to}`);
+    const data = await res.json();
+    if (res.ok) {
+      console.log("✅ Alert email sent successfully, id:", data.id);
+    } else {
+      console.error("❌ Resend error:", JSON.stringify(data));
+    }
   } catch(e) {
     console.error("❌ Failed to send alert email:", e.message);
   }
