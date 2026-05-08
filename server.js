@@ -10,33 +10,32 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json({ limit: "10mb" }));
 
-// ── Email alert setup ─────────────────────────────────────────────────────
+// ── Email alert ───────────────────────────────────────────────────────────
 const mailer = nodemailer.createTransport({
   service: "gmail",
   auth: {
-    user: process.env.ALERT_EMAIL_FROM || "sabakvetenadze123@gmail.com",
+    user: process.env.ALERT_EMAIL_FROM,
     pass: process.env.GMAIL_APP_PASSWORD
   }
 });
 
-async function sendBreachAlert(ip, attempts) {
+async function sendBreachAlert(ip, count) {
   try {
     await mailer.sendMail({
-      from: process.env.ALERT_EMAIL_FROM || "sabakvetenadze123@gmail.com",
-      to:   process.env.ALERT_EMAIL_TO   || "sabakvetenadze123@gmail.com",
+      from: process.env.ALERT_EMAIL_FROM,
+      to:   process.env.ALERT_EMAIL_TO,
       subject: "⚠️ Resell Tracker — Wrong PIN Alert",
       html: `
-        <div style="font-family:sans-serif;max-width:480px;margin:0 auto">
+        <div style="font-family:sans-serif;max-width:480px">
           <h2 style="color:#ef4444">⚠️ Failed PIN Attempts</h2>
-          <p>Someone entered the wrong PIN <strong>${attempts} times</strong> on your Resell Tracker.</p>
-          <table style="width:100%;border-collapse:collapse;margin-top:16px">
+          <p>Someone entered the wrong PIN <strong>${count} times</strong>.</p>
+          <table style="width:100%;border-collapse:collapse;margin-top:12px">
             <tr><td style="padding:8px;color:#666">Time</td><td style="padding:8px"><strong>${new Date().toLocaleString()}</strong></td></tr>
             <tr style="background:#f9f9f9"><td style="padding:8px;color:#666">IP Address</td><td style="padding:8px"><strong>${ip}</strong></td></tr>
-            <tr><td style="padding:8px;color:#666">Attempts</td><td style="padding:8px"><strong>${attempts}</strong></td></tr>
+            <tr><td style="padding:8px;color:#666">Attempts</td><td style="padding:8px"><strong>${count}</strong></td></tr>
           </table>
-          <p style="margin-top:20px;color:#666;font-size:13px">If this was you, ignore this email. If not, consider changing your passcode in Railway.</p>
-        </div>
-      `
+          <p style="margin-top:16px;color:#666;font-size:13px">If this wasn't you, consider changing your passcode in Railway env variables.</p>
+        </div>`
     });
     console.log("Alert email sent for IP:", ip);
   } catch(e) {
@@ -44,13 +43,12 @@ async function sendBreachAlert(ip, attempts) {
   }
 }
 
-// ── Failed attempt tracker (in-memory, keyed by IP) ───────────────────────
+// ── Failed attempt tracker ────────────────────────────────────────────────
 const failedAttempts = {};
-const MAX_ATTEMPTS = 3;
-const RESET_MS = 30 * 60 * 1000; // reset counter after 30 min
+const RESET_MS = 30 * 60 * 1000;
 
 function getIP(req) {
-  return req.headers["x-forwarded-for"]?.split(",")[0]?.trim() || req.ip || "unknown";
+  return (req.headers["x-forwarded-for"] || "").split(",")[0].trim() || req.ip || "unknown";
 }
 
 function trackFail(ip) {
@@ -66,11 +64,6 @@ function trackFail(ip) {
 function resetAttempts(ip) {
   delete failedAttempts[ip];
 }
-
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-app.use(express.json({ limit: "10mb" }));
 
 // ── Sessions ──────────────────────────────────────────────────────────────
 app.use(session({
@@ -90,7 +83,7 @@ function requirePin(req, res, next) {
 // ── Static files ──────────────────────────────────────────────────────────
 app.use(express.static(__dirname));
 
-// ── PIN routes (public) ───────────────────────────────────────────────────
+// ── PIN routes ────────────────────────────────────────────────────────────
 app.get("/api/auth/pin-status", (req, res) => {
   res.json({ verified: !!(req.session && req.session.pinVerified) });
 });
@@ -107,8 +100,8 @@ app.post("/api/auth/pin", async (req, res) => {
   } else {
     const count = trackFail(ip);
     console.log(`Wrong PIN from ${ip} — attempt ${count}`);
-    if (count >= MAX_ATTEMPTS) {
-      sendBreachAlert(ip, count); // fire and forget
+    if (count >= 3) {
+      sendBreachAlert(ip, count);
     }
     res.status(401).json({ error: "Incorrect PIN", attempts: count });
   }
