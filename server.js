@@ -3,6 +3,69 @@ const path = require("path");
 const pool = require("./db");
 const session = require("express-session");
 const pgSession = require("connect-pg-simple")(session);
+const nodemailer = require("nodemailer");
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.use(express.json({ limit: "10mb" }));
+
+// ── Email alert setup ─────────────────────────────────────────────────────
+const mailer = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.ALERT_EMAIL_FROM || "sabakvetenadze123@gmail.com",
+    pass: process.env.GMAIL_APP_PASSWORD
+  }
+});
+
+async function sendBreachAlert(ip, attempts) {
+  try {
+    await mailer.sendMail({
+      from: process.env.ALERT_EMAIL_FROM || "sabakvetenadze123@gmail.com",
+      to:   process.env.ALERT_EMAIL_TO   || "sabakvetenadze123@gmail.com",
+      subject: "⚠️ Resell Tracker — Wrong PIN Alert",
+      html: `
+        <div style="font-family:sans-serif;max-width:480px;margin:0 auto">
+          <h2 style="color:#ef4444">⚠️ Failed PIN Attempts</h2>
+          <p>Someone entered the wrong PIN <strong>${attempts} times</strong> on your Resell Tracker.</p>
+          <table style="width:100%;border-collapse:collapse;margin-top:16px">
+            <tr><td style="padding:8px;color:#666">Time</td><td style="padding:8px"><strong>${new Date().toLocaleString()}</strong></td></tr>
+            <tr style="background:#f9f9f9"><td style="padding:8px;color:#666">IP Address</td><td style="padding:8px"><strong>${ip}</strong></td></tr>
+            <tr><td style="padding:8px;color:#666">Attempts</td><td style="padding:8px"><strong>${attempts}</strong></td></tr>
+          </table>
+          <p style="margin-top:20px;color:#666;font-size:13px">If this was you, ignore this email. If not, consider changing your passcode in Railway.</p>
+        </div>
+      `
+    });
+    console.log("Alert email sent for IP:", ip);
+  } catch(e) {
+    console.error("Failed to send alert email:", e.message);
+  }
+}
+
+// ── Failed attempt tracker (in-memory, keyed by IP) ───────────────────────
+const failedAttempts = {};
+const MAX_ATTEMPTS = 3;
+const RESET_MS = 30 * 60 * 1000; // reset counter after 30 min
+
+function getIP(req) {
+  return req.headers["x-forwarded-for"]?.split(",")[0]?.trim() || req.ip || "unknown";
+}
+
+function trackFail(ip) {
+  const now = Date.now();
+  if (!failedAttempts[ip] || now - failedAttempts[ip].firstAt > RESET_MS) {
+    failedAttempts[ip] = { count: 1, firstAt: now };
+  } else {
+    failedAttempts[ip].count++;
+  }
+  return failedAttempts[ip].count;
+}
+
+function resetAttempts(ip) {
+  delete failedAttempts[ip];
+}
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -32,14 +95,22 @@ app.get("/api/auth/pin-status", (req, res) => {
   res.json({ verified: !!(req.session && req.session.pinVerified) });
 });
 
-app.post("/api/auth/pin", (req, res) => {
+app.post("/api/auth/pin", async (req, res) => {
   const { pin } = req.body;
   const correct = process.env.PASSCODE || "0000";
+  const ip = getIP(req);
+
   if (String(pin) === String(correct)) {
+    resetAttempts(ip);
     req.session.pinVerified = true;
     res.json({ success: true });
   } else {
-    res.status(401).json({ error: "Incorrect PIN" });
+    const count = trackFail(ip);
+    console.log(`Wrong PIN from ${ip} — attempt ${count}`);
+    if (count >= MAX_ATTEMPTS) {
+      sendBreachAlert(ip, count); // fire and forget
+    }
+    res.status(401).json({ error: "Incorrect PIN", attempts: count });
   }
 });
 
