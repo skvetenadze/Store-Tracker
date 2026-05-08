@@ -10,20 +10,27 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json({ limit: "10mb" }));
 
-// ── Email alert ───────────────────────────────────────────────────────────
-const mailer = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.ALERT_EMAIL_FROM,
-    pass: process.env.GMAIL_APP_PASSWORD
-  }
-});
-
 async function sendBreachAlert(ip, count) {
+  const from = process.env.ALERT_EMAIL_FROM;
+  const to   = process.env.ALERT_EMAIL_TO;
+  const pass = process.env.GMAIL_APP_PASSWORD;
+
+  if (!from || !pass) {
+    console.error("⚠️  Email alert skipped — ALERT_EMAIL_FROM or GMAIL_APP_PASSWORD not set in env variables");
+    return;
+  }
+
+  console.log(`📧 Sending breach alert to ${to} for IP ${ip}...`);
+
   try {
-    await mailer.sendMail({
-      from: process.env.ALERT_EMAIL_FROM,
-      to:   process.env.ALERT_EMAIL_TO,
+    const transport = nodemailer.createTransport({
+      service: "gmail",
+      auth: { user: from, pass: pass.replace(/\s/g, "") }
+    });
+
+    await transport.sendMail({
+      from,
+      to,
       subject: "⚠️ Resell Tracker — Wrong PIN Alert",
       html: `
         <div style="font-family:sans-serif;max-width:480px">
@@ -37,9 +44,10 @@ async function sendBreachAlert(ip, count) {
           <p style="margin-top:16px;color:#666;font-size:13px">If this wasn't you, consider changing your passcode in Railway env variables.</p>
         </div>`
     });
-    console.log("Alert email sent for IP:", ip);
+
+    console.log(`✅ Alert email sent successfully to ${to}`);
   } catch(e) {
-    console.error("Failed to send alert email:", e.message);
+    console.error("❌ Failed to send alert email:", e.message);
   }
 }
 
