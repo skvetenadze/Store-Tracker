@@ -837,7 +837,7 @@ function syncPickers() {
 }
 function resetSoldDates() {
   if (!confirm('This will clear all sold dates so the Last 7 Days starts tracking from today. Continue?')) return;
-  items.forEach(function(i) { if (i.status === 'SOLD') i.sold_at = null; });
+  items.forEach(function(i) { if (i.status === 'SOLD' || i.status === 'Shipped to Buyer') i.sold_at = null; });
   markDirty();
   flushToServer();
   renderWeekly();
@@ -959,7 +959,7 @@ function buildCharts() {
     for(var j=0; j<buckets.length; j++){
       var b = buckets[j];
       if(t >= b.start && t <= b.end){
-        if(item.status === 'SOLD' && hasSold(item)){ b.profit+=(s-c); b.sold+=s; b.cnt++; }
+        if((item.status === 'SOLD' || item.status === 'Shipped to Buyer') && hasSold(item)){ b.profit+=(s-c); b.sold+=s; b.cnt++; }
         if(item.status === 'Delivered at Home') b.inv+=c;
         break;
       }
@@ -993,7 +993,7 @@ function drawChart(id, vals, color, labels, isDollar) {
 function renderWeekly() {
   var now = Date.now(), SEVEN = 7*24*3600*1000, cutoff = now - SEVEN;
   var sold7 = items.filter(function(i){
-    if(i.status !== 'SOLD' || !hasSold(i)) return false;
+    if((i.status !== 'SOLD' && i.status !== 'Shipped to Buyer') || !hasSold(i)) return false;
     var t = i.sold_at ? new Date(i.sold_at).getTime() : 0;
     return t >= cutoff;
   });
@@ -1015,7 +1015,7 @@ function renderWeekly() {
 }
 
 function renderRecent() {
-  var sold = items.filter(function(i){ return i.status==='SOLD' && hasSold(i); });
+  var sold = items.filter(function(i){ return (i.status==='SOLD' || i.status==='Shipped to Buyer') && hasSold(i); });
   sold.sort(function(a,b){
     var at = new Date(a.sold_at || 0).getTime();
     var bt = new Date(b.sold_at || 0).getTime();
@@ -1143,13 +1143,13 @@ async function saveItem(){
     tracking: document.getElementById('f-tracking').value.trim(),
     notes: document.getElementById('f-notes').value.trim(),
     // Preserve updatedAt for already-SOLD items so note edits don't bubble them up in Recent Sales
-    updatedAt: (editId && oldItem && oldItem.status === 'SOLD' && newStatus === 'SOLD')
+    updatedAt: (editId && oldItem && (oldItem.status === 'SOLD' || oldItem.status === 'Shipped to Buyer') && (newStatus === 'SOLD' || newStatus === 'Shipped to Buyer'))
       ? (oldItem.updatedAt || oldItem.updatedat || new Date().toISOString())
       : new Date().toISOString(),
     // sold_at: only stamp NOW when transitioning INTO SOLD — never reset if already SOLD
-    sold_at: (newStatus === 'SOLD')
-      ? (oldItem && oldItem.status === 'SOLD'
-          ? (oldItem.sold_at || null)  // keep null for legacy items — don't guess from updatedAt
+    sold_at: (newStatus === 'SOLD' || newStatus === 'Shipped to Buyer')
+      ? (oldItem && (oldItem.status === 'SOLD' || oldItem.status === 'Shipped to Buyer')
+          ? (oldItem.sold_at || null)  // keep null for legacy items
           : new Date().toISOString())
       : null
   };
@@ -1372,8 +1372,8 @@ function applyBulk() {
     if (!ids[item.id]) return;
     count++;
     if (newStatus) {
-      if (newStatus === 'SOLD' && item.status !== 'SOLD') item.sold_at = now;
-      if (newStatus !== 'SOLD') item.sold_at = null;
+      if ((newStatus === 'SOLD' || newStatus === 'Shipped to Buyer') && item.status !== 'SOLD' && item.status !== 'Shipped to Buyer') item.sold_at = now;
+      if (newStatus !== 'SOLD' && newStatus !== 'Shipped to Buyer') item.sold_at = null;
       item.status = newStatus;
     }
     if (newCost     !== '') item.cost     = newCost;
