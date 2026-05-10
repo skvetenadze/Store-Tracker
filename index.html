@@ -1054,9 +1054,11 @@ async function saveItem(){
     updatedAt: (editId && oldItem && oldItem.status === 'SOLD' && newStatus === 'SOLD')
       ? (oldItem.updatedAt || oldItem.updatedat || new Date().toISOString())
       : new Date().toISOString(),
-    // sold_at: set once when item first becomes SOLD, never overwritten
+    // sold_at: only stamp NOW when transitioning INTO SOLD — never reset if already SOLD
     sold_at: (newStatus === 'SOLD')
-      ? (oldItem && oldItem.sold_at ? oldItem.sold_at : new Date().toISOString())
+      ? (oldItem && oldItem.status === 'SOLD'
+          ? (oldItem.sold_at || oldItem.updatedAt || oldItem.updatedat || new Date().toISOString())
+          : new Date().toISOString())
       : null
   };
 
