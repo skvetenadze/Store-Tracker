@@ -897,7 +897,7 @@ function buildCharts() {
       }
     }
   });
-  var labels=buckets.map(function(b){var d=new Date(b.start);return(d.getMonth()+1)+'/'+d.getDate();});
+  var labels=buckets.map(function(b,idx){var d=new Date(idx===N-1?b.end:b.start);return(d.getMonth()+1)+'/'+d.getDate();});
   drawChart('chart-profit',buckets.map(function(b){return b.profit;}),'#22c55e',labels,true);
   drawChart('chart-sold',  buckets.map(function(b){return b.sold;  }),'#f87171',labels,true);
   drawChart('chart-inv',   buckets.map(function(b){return b.inv;   }),'#22c55e',labels,true);
