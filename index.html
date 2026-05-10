@@ -1129,7 +1129,7 @@ async function saveItem(){
     // sold_at: only stamp NOW when transitioning INTO SOLD — never reset if already SOLD
     sold_at: (newStatus === 'SOLD')
       ? (oldItem && oldItem.status === 'SOLD'
-          ? (oldItem.sold_at || oldItem.updatedAt || oldItem.updatedat || new Date().toISOString())
+          ? (oldItem.sold_at || null)  // keep null for legacy items — don't guess from updatedAt
           : new Date().toISOString())
       : null
   };
