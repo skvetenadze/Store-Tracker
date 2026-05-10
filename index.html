@@ -925,8 +925,8 @@ function drawChart(id, vals, color, labels, isDollar) {
 function renderRecent() {
   var sold = items.filter(function(i){ return i.status==='SOLD' && hasSold(i); });
   sold.sort(function(a,b){
-    var at = new Date(a.sold_at || a.updatedAt || a.updatedat || 0).getTime();
-    var bt = new Date(b.sold_at || b.updatedAt || b.updatedat || 0).getTime();
+    var at = new Date(a.sold_at || 0).getTime();
+    var bt = new Date(b.sold_at || 0).getTime();
     return bt - at;
   });
   sold=sold.slice(0,8);
@@ -1050,7 +1050,10 @@ async function saveItem(){
     status: newStatus,
     tracking: document.getElementById('f-tracking').value.trim(),
     notes: document.getElementById('f-notes').value.trim(),
-    updatedAt: new Date().toISOString(),
+    // Preserve updatedAt for already-SOLD items so note edits don't bubble them up in Recent Sales
+    updatedAt: (editId && oldItem && oldItem.status === 'SOLD' && newStatus === 'SOLD')
+      ? (oldItem.updatedAt || oldItem.updatedat || new Date().toISOString())
+      : new Date().toISOString(),
     // sold_at: set once when item first becomes SOLD, never overwritten
     sold_at: (newStatus === 'SOLD')
       ? (oldItem && oldItem.sold_at ? oldItem.sold_at : new Date().toISOString())
