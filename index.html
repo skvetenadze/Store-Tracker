@@ -974,7 +974,7 @@ function renderWeekly() {
   var now = Date.now(), SEVEN = 7*24*3600*1000, cutoff = now - SEVEN;
   var sold7 = items.filter(function(i){
     if(i.status !== 'SOLD' || !hasSold(i)) return false;
-    var t = new Date(i.sold_at || i.updatedAt || i.updatedat || 0).getTime();
+    var t = i.sold_at ? new Date(i.sold_at).getTime() : 0;
     return t >= cutoff;
   });
   var qty = sold7.length;
