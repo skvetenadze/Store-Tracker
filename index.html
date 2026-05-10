@@ -784,6 +784,16 @@ window.api = {
       <div class="color-row"><span class="badge badge-dispute">DISPUTE</span><div class="color-row-name">DISPUTE</div><div class="color-pickers"><div class="color-grp"><label>Text</label><input type="color" id="col-dispute-text" oninput="applyColor('dispute','text',this.value)"></div><div class="color-grp"><label>BG</label><input type="color" id="col-dispute-bg" oninput="applyColor('dispute','bg',this.value)"></div></div></div>
       <div class="color-row"><span class="badge badge-damaged">DAMAGED</span><div class="color-row-name">DAMAGED</div><div class="color-pickers"><div class="color-grp"><label>Text</label><input type="color" id="col-damaged-text" oninput="applyColor('damaged','text',this.value)"></div><div class="color-grp"><label>BG</label><input type="color" id="col-damaged-bg" oninput="applyColor('damaged','bg',this.value)"></div></div></div>
     </div>
+    <div class="settings-sec">
+      <div class="settings-sec-title"><span>Data</span></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;">
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--text)">Reset 7-Day Tracking</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:3px">Clears all sold dates so the Last 7 Days counter starts fresh from today</div>
+        </div>
+        <button class="btn" style="flex-shrink:0;margin-left:16px;color:var(--red);border-color:var(--red)" onclick="resetSoldDates()">↺ Reset</button>
+      </div>
+    </div>
     <div style="display:flex;justify-content:flex-end"><button class="btn btn-primary" onclick="closeSettings()">Done</button></div>
   </div>
 </div>
@@ -825,6 +835,16 @@ function syncPickers() {
   var d = getDef();
   CKEYS.forEach(function(k){ var c=customColors[k]||{}; var t=document.getElementById('col-'+k+'-text'); var b=document.getElementById('col-'+k+'-bg'); if(t)t.value=c.text||d[k].text; if(b)b.value=c.bg||d[k].bg; });
 }
+function resetSoldDates() {
+  if (!confirm('This will clear all sold dates so the Last 7 Days starts tracking from today. Continue?')) return;
+  items.forEach(function(i) { if (i.status === 'SOLD') i.sold_at = null; });
+  markDirty();
+  flushToServer();
+  renderWeekly();
+  renderRecent();
+  alert('Done! The Last 7 Days will now count from items you mark as sold going forward.');
+}
+
 function resetColors() { customColors={}; try{localStorage.removeItem('rt-colors');}catch(e){} applyAllColors(); syncPickers(); }
 function openSettings() { syncPickers(); document.getElementById('settings-overlay').classList.add('open'); }
 function closeSettings() { document.getElementById('settings-overlay').classList.remove('open'); }
