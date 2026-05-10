@@ -251,6 +251,12 @@ input[type="color"]::-webkit-color-swatch { border-radius:4px; border:none; }
   .recent-box { overflow-x:auto; }
   .recent-box table { min-width:480px; }
 
+  /* Last 7 Days — 2x2 grid on mobile */
+  .week-stats { grid-template-columns:1fr 1fr; gap:16px; }
+  .week-stat { padding-right:0; margin-right:0; border-right:none; border-bottom:1px solid var(--border); padding-bottom:16px; }
+  .week-stat:nth-child(3), .week-stat:nth-child(4) { border-bottom:none; padding-bottom:0; }
+  .week-stat-val { font-size:20px; }
+
   /* Hide desktop table, show mobile card list */
   .table-area { display:none; }
   .mob-cards { display:flex; flex:1; overflow-y:auto; min-height:0; -webkit-overflow-scrolling:touch; }
