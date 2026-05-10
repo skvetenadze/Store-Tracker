@@ -100,6 +100,16 @@ body { font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif; backg
 .recent-empty { padding:28px; text-align:center; color:var(--text3); font-size:13px; }
 .recent-box table { margin-top:0; min-width:unset; }
 .recent-box thead th { background:var(--bg2); }
+.week-sec { margin-top:24px; }
+.week-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+.week-title { font-size:16px; font-weight:700; color:var(--text); }
+.week-badge { font-size:11px; font-weight:600; color:var(--text3); background:var(--bg3); border:1px solid var(--border); border-radius:20px; padding:3px 10px; }
+.week-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+.week-card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius-lg); padding:16px 18px; display:flex; flex-direction:column; gap:4px; transition:border-color .15s,box-shadow .15s; }
+.week-card:hover { border-color:var(--border2); box-shadow:0 4px 20px rgba(0,0,0,.14); }
+.week-card-lbl { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.7px; color:var(--text3); }
+.week-card-val { font-size:26px; font-weight:800; letter-spacing:-1px; line-height:1.15; }
+.week-card-sub { font-size:11px; color:var(--text3); margin-top:2px; }
 
 /* Inventory */
 .toolbar { display:flex; align-items:center; gap:10px; padding:10px 20px; border-bottom:1px solid var(--border); background:var(--bg); flex-shrink:0; }
@@ -609,6 +619,34 @@ window.api = {
         <svg class="card-chart" id="chart-count" viewBox="0 0 300 90" preserveAspectRatio="xMidYMid meet"></svg>
       </div>
     </div>
+    <div class="week-sec">
+      <div class="week-header">
+        <div class="week-title">Last 7 Days</div>
+        <div class="week-badge" id="week-range"></div>
+      </div>
+      <div class="week-grid">
+        <div class="week-card">
+          <div class="week-card-lbl">Profit</div>
+          <div class="week-card-val col-green" id="week-profit">$0.00</div>
+          <div class="week-card-sub" id="week-profit-sub">from 0 sales</div>
+        </div>
+        <div class="week-card">
+          <div class="week-card-lbl">Items Sold</div>
+          <div class="week-card-val col-text" id="week-qty">0</div>
+          <div class="week-card-sub">units in past 7 days</div>
+        </div>
+        <div class="week-card">
+          <div class="week-card-lbl">Total Cost</div>
+          <div class="week-card-val col-red" id="week-cost">$0.00</div>
+          <div class="week-card-sub">what you spent</div>
+        </div>
+        <div class="week-card">
+          <div class="week-card-lbl">Total Revenue</div>
+          <div class="week-card-val col-text" id="week-revenue">$0.00</div>
+          <div class="week-card-sub" id="week-margin-sub">— margin</div>
+        </div>
+      </div>
+    </div>
     <div class="recent-sec">
       <div class="recent-title">Recent Sales</div>
       <div class="recent-box">
@@ -796,7 +834,7 @@ function switchTab(tab) {
     var el=document.getElementById('bnav-'+t); if(el) el.classList.toggle('active',t===tab);
   });
   if (tab==='inventory') { document.getElementById('status-filter').value=''; activeChip=null; setChipActive(null); renderTable(); }
-  if (tab==='dashboard') { buildCharts(); renderRecent(); }
+  if (tab==='dashboard') { buildCharts(); renderWeekly(); renderRecent(); }
   if (tab==='suppliers') { renderSuppliers(); }
 }
 
@@ -920,6 +958,30 @@ function drawChart(id, vals, color, labels, isDollar) {
   html+='<polyline points="'+pts+'" fill="none" stroke="'+color+'" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
   for(var di=0;di<n;di++) if(vals[di]>0) html+='<circle cx="'+px(di).toFixed(1)+'" cy="'+py(vals[di]).toFixed(1)+'" r="3" fill="'+color+'"/>';
   svg.innerHTML=html;
+}
+
+function renderWeekly() {
+  var now = Date.now(), SEVEN = 7*24*3600*1000, cutoff = now - SEVEN;
+  var sold7 = items.filter(function(i){
+    if(i.status !== 'SOLD' || !hasSold(i)) return false;
+    var t = new Date(i.sold_at || i.updatedAt || i.updatedat || 0).getTime();
+    return t >= cutoff;
+  });
+  var qty = sold7.length;
+  var totalCost = 0, totalRev = 0;
+  sold7.forEach(function(i){ totalCost += parseFloat(i.cost)||0; totalRev += parseFloat(i.sold)||0; });
+  var profit = totalRev - totalCost;
+  var margin = totalRev > 0 ? (profit/totalRev*100).toFixed(1) : '0.0';
+  // date range label
+  var d0 = new Date(cutoff), d1 = new Date(now);
+  var fmt = function(d){ return (d.getMonth()+1)+'/'+d.getDate(); };
+  document.getElementById('week-range').textContent = fmt(d0) + ' – ' + fmt(d1);
+  document.getElementById('week-profit').textContent = '$'+profit.toFixed(2);
+  document.getElementById('week-profit-sub').textContent = 'from '+qty+' sale'+(qty===1?'':'s');
+  document.getElementById('week-qty').textContent = qty;
+  document.getElementById('week-cost').textContent = '$'+totalCost.toFixed(2);
+  document.getElementById('week-revenue').textContent = '$'+totalRev.toFixed(2);
+  document.getElementById('week-margin-sub').textContent = margin+'% margin';
 }
 
 function renderRecent() {
@@ -1093,7 +1155,7 @@ async function deleteItem(id){
   if(!confirm('Delete this item? This cannot be undone.'))return;
   items=items.filter(function(x){return x.id!==id;});
   markDirty(); updateStats(); renderTable();
-  if(currentTab==='dashboard'){buildCharts();renderRecent();}
+  if(currentTab==='dashboard'){buildCharts();renderWeekly();renderRecent();}
 }
 function openLink(url){ window.api.openLink(url); }
 
@@ -1107,7 +1169,7 @@ async function importCSV(){
   var added=0;
   function parseRow(row){var cols=[],cur='',inQ=false;for(var i=0;i<row.length;i++){var ch=row[i];if(ch==='"'){if(inQ&&row[i+1]==='"'){cur+='"';i++;}else inQ=!inQ;}else if(ch===','&&!inQ){cols.push(cur);cur='';}else cur+=ch;}cols.push(cur);return cols;}
   for(var i=1;i<lines.length;i++){if(!lines[i].trim())continue;var cols=parseRow(lines[i]);var name=cm.name>=0?(cols[cm.name]||'').trim():'';if(!name)continue;items.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2)+i,name:name,cost:cm.cost>=0?(cols[cm.cost]||'').replace(/[^0-9.]/g,''):'',sold:cm.sold>=0?(cols[cm.sold]||'').replace(/[^0-9.]/g,''):'',status:normS(cm.status>=0?cols[cm.status]:''),tracking:cm.tracking>=0?(cols[cm.tracking]||'').trim():'',notes:cm.notes>=0?(cols[cm.notes]||'').trim():'',updatedAt:new Date().toISOString()});added++;}
-  if(added>0){markDirty();await flushToServer();updateStats();renderTable();if(currentTab==='dashboard'){buildCharts();renderRecent();}alert('Imported '+added+' products.');}else{alert('No valid rows found.');}
+  if(added>0){markDirty();await flushToServer();updateStats();renderTable();if(currentTab==='dashboard'){buildCharts();renderWeekly();renderRecent();}alert('Imported '+added+' products.');}else{alert('No valid rows found.');}
 }
 async function exportCSV(){
   var rows=[['Product','Cost','Sold','Status','Tracking','Notes','Profit']];
@@ -1300,7 +1362,7 @@ function applyBulk() {
   markDirty();
   updateStats();
   renderTable();
-  if (currentTab === 'dashboard') { buildCharts(); renderRecent(); }
+  if (currentTab === 'dashboard') { buildCharts(); renderWeekly(); renderRecent(); }
 }
 
 function deleteBulk() {
@@ -1314,7 +1376,7 @@ function deleteBulk() {
   markDirty();
   updateStats();
   renderTable();
-  if (currentTab === 'dashboard') { buildCharts(); renderRecent(); }
+  if (currentTab === 'dashboard') { buildCharts(); renderWeekly(); renderRecent(); }
 }
 
 
