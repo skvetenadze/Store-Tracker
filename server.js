@@ -1,4 +1,5 @@
 const express = require("express");
+const crypto = require("crypto");
 const path = require("path");
 const pool = require("./db");
 const session = require("express-session");
@@ -6,6 +7,9 @@ const pgSession = require("connect-pg-simple")(session);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// One-time page tokens — consumed on first load, refresh requires PIN again
+const pageTokens = new Map();
 
 app.use(express.json({ limit: "10mb" }));
 
@@ -162,7 +166,7 @@ const PIN_PAGE = `<!DOCTYPE html>
     try{
       var r=await fetch('/api/auth/pin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin})});
       var d=await r.json();
-      if(d.success){window.location.href='/';}
+      if(d.success){window.location.href='/app?t='+d.token;}
       else{document.getElementById('pin-err').textContent='Incorrect PIN. Try again.';pin='';upd();}
     }catch(e){document.getElementById('pin-err').textContent='Error. Try again.';pin='';upd();}
   }
@@ -187,7 +191,10 @@ app.post("/api/auth/pin", async (req, res) => {
   if (String(pin) === String(correct)) {
     resetAttempts(ip);
     req.session.pinVerified = true;
-    res.json({ success: true });
+    const token = crypto.randomBytes(20).toString("hex");
+    pageTokens.set(token, Date.now());
+    setTimeout(() => pageTokens.delete(token), 60000); // expire after 60s if unused
+    res.json({ success: true, token });
   } else {
     const count = trackFail(ip);
     console.log(`Wrong PIN from ${ip} — attempt ${count}`);
@@ -338,14 +345,25 @@ app.post("/api/send-email", requirePin, async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-// ── Serve PIN page or full app based on session ───────────────────────────
-app.get("*", (req, res) => {
-  if (req.session && req.session.pinVerified) {
-    res.sendFile(path.join(__dirname, "index.html"));
-  } else {
-    res.send(PIN_PAGE);
+// ── Routes ───────────────────────────────────────────────────────────────
+// Always show PIN page — no session check
+app.get("/", (req, res) => res.send(PIN_PAGE));
+
+// App page: requires valid session + one-time token
+app.get("/app", (req, res) => {
+  if (!(req.session && req.session.pinVerified)) {
+    return res.redirect("/");
   }
+  const token = req.query.t;
+  if (!token || !pageTokens.has(token)) {
+    return res.redirect("/"); // Refresh or missing token → back to PIN
+  }
+  pageTokens.delete(token); // Consume — single use only
+  res.sendFile(path.join(__dirname, "index.html"));
 });
+
+// Fallback
+app.get("*", (req, res) => res.redirect("/"));
 
 // ── DB init ───────────────────────────────────────────────────────────────
 async function initDB() {

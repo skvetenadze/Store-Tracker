@@ -1867,7 +1867,7 @@ function pinError() {
 
 async function doLock() {
   await fetch('/api/auth/lock', { method: 'POST' });
-  location.reload();
+  window.location.href = '/';
 }
 
 // Keyboard support for desktop
