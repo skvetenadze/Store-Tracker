@@ -652,6 +652,42 @@ async function deleteTemplate() {
   } catch(e) { alert('Error deleting: ' + e.message); }
 }
 
+function openNewTplPanel() {
+  var panel = document.getElementById('em-new-panel');
+  panel.style.display = 'flex';
+  document.getElementById('em-new-name').focus();
+}
+
+function closeNewTplPanel() {
+  document.getElementById('em-new-panel').style.display = 'none';
+  document.getElementById('em-new-name').value = '';
+  document.getElementById('em-new-html').value = '';
+}
+
+async function saveNewTemplate() {
+  var name = document.getElementById('em-new-name').value.trim();
+  var html = document.getElementById('em-new-html').value.trim();
+  if (!name) { alert('Please enter a template name.'); return; }
+  if (!html)  { alert('Please paste your HTML.'); return; }
+  var id = Date.now().toString(36) + Math.random().toString(36).slice(2);
+  try {
+    var res = await fetch('/api/email-templates', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, name, html })
+    });
+    if (!res.ok) { alert('Failed to save.'); return; }
+    emTemplates.push({ id, name, html });
+    renderTplDropdown();
+    document.getElementById('em-tpl-select').value = id;
+    emCurrentTplId = id;
+    document.getElementById('em-html-hidden').value = html;
+    emEditable = false;
+    parseTemplate();
+    closeNewTplPanel();
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
 function getSourceHtml() {
   // If preview was edited, extract from iframe; otherwise use hidden field
   if (emEditable) return getEditedHtml();
@@ -1006,6 +1042,7 @@ async function sendEmail() {
           <select id="em-tpl-select" class="email-input" style="flex:1" onchange="loadTemplate(this.value)">
             <option value="">— Select a template —</option>
           </select>
+          <button class="btn" title="Add new template" onclick="openNewTplPanel()" style="color:var(--accent)">＋</button>
           <button class="btn" title="Save / update template" onclick="openSaveTplModal()">💾</button>
           <button class="btn" title="Delete template" onclick="deleteTemplate()" style="color:var(--red)">🗑</button>
         </div>
@@ -1019,6 +1056,17 @@ async function sendEmail() {
       <div class="email-section">
         <label class="email-lbl">Subject</label>
         <input id="em-subject" type="text" class="email-input" placeholder="Your order has shipped!">
+      </div>
+
+      <!-- New Template Panel (hidden by default) -->
+      <div id="em-new-panel" style="display:none;flex-direction:column;gap:8px;margin-bottom:14px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <span style="font-size:12px;font-weight:700;color:var(--text)">New Template</span>
+          <button class="btn" style="font-size:11px;padding:3px 8px" onclick="closeNewTplPanel()">✕</button>
+        </div>
+        <input id="em-new-name" type="text" class="email-input" placeholder="Template name (e.g. LV Shipping)">
+        <textarea id="em-new-html" class="email-textarea" placeholder="Paste your HTML here..." style="min-height:140px"></textarea>
+        <button class="btn btn-primary" style="width:100%" onclick="saveNewTemplate()">Save Template</button>
       </div>
 
       <div id="em-fields" class="email-fields"></div>
