@@ -94,7 +94,80 @@ function requirePin(req, res, next) {
 }
 
 // ── Static files ──────────────────────────────────────────────────────────
-app.use(express.static(__dirname));
+// ── Static files (CSS, images only — NOT index.html) ─────────────────────
+app.use(express.static(__dirname, { index: false }));
+
+// ── Standalone PIN page (no app HTML at all) ──────────────────────────────
+const PIN_PAGE = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Resell Tracker</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#1a1a2e;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+  .pin-wrap{display:flex;flex-direction:column;align-items:center;gap:28px;padding:40px 32px;background:#16213e;border:1px solid #2a2a4a;border-radius:20px;width:320px}
+  .pin-icon{font-size:40px}
+  .pin-title{font-size:20px;font-weight:700;color:#fff}
+  .pin-sub{font-size:13px;color:#888}
+  .pin-dots{display:flex;gap:14px}
+  .pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid #444;transition:background .15s,border-color .15s}
+  .pin-dot.filled{background:#6c63ff;border-color:#6c63ff}
+  .pin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%}
+  .pin-btn{background:#1e1e3a;border:1px solid #2a2a4a;border-radius:12px;color:#fff;font-size:20px;font-weight:600;padding:16px;cursor:pointer;transition:background .15s,transform .1s}
+  .pin-btn:hover{background:#2a2a5a}
+  .pin-btn:active{transform:scale(.95)}
+  .pin-err{color:#ef4444;font-size:12px;min-height:16px;text-align:center}
+</style>
+</head>
+<body>
+<div class="pin-wrap">
+  <div class="pin-icon">📦</div>
+  <div class="pin-title">Resell Tracker</div>
+  <div class="pin-sub">Enter your 4-digit passcode</div>
+  <div class="pin-dots">
+    <div class="pin-dot" id="d0"></div>
+    <div class="pin-dot" id="d1"></div>
+    <div class="pin-dot" id="d2"></div>
+    <div class="pin-dot" id="d3"></div>
+  </div>
+  <div class="pin-grid">
+    <button class="pin-btn" onclick="pk('1')">1</button>
+    <button class="pin-btn" onclick="pk('2')">2</button>
+    <button class="pin-btn" onclick="pk('3')">3</button>
+    <button class="pin-btn" onclick="pk('4')">4</button>
+    <button class="pin-btn" onclick="pk('5')">5</button>
+    <button class="pin-btn" onclick="pk('6')">6</button>
+    <button class="pin-btn" onclick="pk('7')">7</button>
+    <button class="pin-btn" onclick="pk('8')">8</button>
+    <button class="pin-btn" onclick="pk('9')">9</button>
+    <div></div>
+    <button class="pin-btn" onclick="pk('0')">0</button>
+    <button class="pin-btn" onclick="pdel()">&#9003;</button>
+  </div>
+  <div class="pin-err" id="pin-err"></div>
+</div>
+<script>
+  var pin='';
+  function pk(d){if(pin.length>=4)return;pin+=d;upd();if(pin.length===4)submit();}
+  function pdel(){if(!pin.length)return;pin=pin.slice(0,-1);upd();}
+  function upd(){for(var i=0;i<4;i++)document.getElementById('d'+i).className='pin-dot'+(i<pin.length?' filled':'');}
+  async function submit(){
+    try{
+      var r=await fetch('/api/auth/pin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin})});
+      var d=await r.json();
+      if(d.success){window.location.href='/';}
+      else{document.getElementById('pin-err').textContent='Incorrect PIN. Try again.';pin='';upd();}
+    }catch(e){document.getElementById('pin-err').textContent='Error. Try again.';pin='';upd();}
+  }
+  document.addEventListener('keydown',function(e){
+    if(e.key>='0'&&e.key<='9')pk(e.key);
+    else if(e.key==='Backspace')pdel();
+  });
+</script>
+</body>
+</html>`;
 
 // ── PIN routes ────────────────────────────────────────────────────────────
 app.get("/api/auth/pin-status", (req, res) => {
@@ -260,8 +333,13 @@ app.post("/api/send-email", requirePin, async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+// ── Serve PIN page or full app based on session ───────────────────────────
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "index.html"));
+  if (req.session && req.session.pinVerified) {
+    res.sendFile(path.join(__dirname, "index.html"));
+  } else {
+    res.send(PIN_PAGE);
+  }
 });
 
 // ── DB init ───────────────────────────────────────────────────────────────

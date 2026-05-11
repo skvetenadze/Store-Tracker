@@ -398,7 +398,8 @@ tbody tr.selected { background:rgba(34,197,94,0.07) !important; }
 }
 
 /* ════ PIN SCREEN ════ */
-#pin-screen {
+#pin-screen { display:none !important; }
+#pin-screen-UNUSED {
   position:fixed; inset:0; z-index:9999;
   background:var(--bg);
   display:flex; align-items:center; justify-content:center;
@@ -1926,7 +1927,7 @@ async function loadApp(){
 
 async function init(){
   loadSettings();
-  await checkPin();
+  await loadApp();
 }
 init();
 </script>
