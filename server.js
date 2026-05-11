@@ -210,33 +210,54 @@ app.post("/api/suppliers", requirePin, async (req, res) => {
   }
 });
 
+// ── Email Templates ───────────────────────────────────────────────────────
+app.get("/api/email-templates", requirePin, async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM email_templates ORDER BY created_at ASC");
+    res.json(result.rows);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.post("/api/email-templates", requirePin, async (req, res) => {
+  const { id, name, html } = req.body;
+  if (!name || !html) return res.status(400).json({ error: "Missing name or html" });
+  try {
+    await pool.query(
+      `INSERT INTO email_templates (id, name, html, created_at)
+       VALUES ($1,$2,$3,$4)
+       ON CONFLICT (id) DO UPDATE SET name=$2, html=$3`,
+      [id || Date.now().toString(36), name, html, new Date().toISOString()]
+    );
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.delete("/api/email-templates/:id", requirePin, async (req, res) => {
+  try {
+    await pool.query("DELETE FROM email_templates WHERE id=$1", [req.params.id]);
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// ── Send Email ────────────────────────────────────────────────────────────
 app.post("/api/send-email", requirePin, async (req, res) => {
   const { to, subject, html } = req.body;
   const apiKey = process.env.RESEND_API_KEY;
-
-  if (!apiKey) return res.status(500).json({ error: "RESEND_API_KEY not set in env variables" });
+  if (!apiKey) return res.status(500).json({ error: "RESEND_API_KEY not set" });
   if (!to || !subject || !html) return res.status(400).json({ error: "Missing to, subject, or html" });
-
   try {
     const r = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         from: process.env.EMAIL_FROM || "Resell Tracker <onboarding@resend.dev>",
-        to: [to],
-        subject,
-        html
+        to: [to], subject, html
       })
     });
     const data = await r.json();
-    if (r.ok) {
-      res.json({ success: true, id: data.id });
-    } else {
-      res.status(500).json({ error: data.message || "Resend error" });
-    }
-  } catch(e) {
-    res.status(500).json({ error: e.message });
-  }
+    if (r.ok) res.json({ success: true, id: data.id });
+    else res.status(500).json({ error: data.message || "Resend error" });
+  } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
 app.get("*", (req, res) => {
@@ -255,6 +276,9 @@ async function initDB() {
   await pool.query(`CREATE TABLE IF NOT EXISTS suppliers (
     id TEXT PRIMARY KEY, name TEXT, contact TEXT, platform TEXT,
     stars INTEGER, description TEXT, created_at TEXT
+  );`);
+  await pool.query(`CREATE TABLE IF NOT EXISTS email_templates (
+    id TEXT PRIMARY KEY, name TEXT, html TEXT, created_at TEXT
   );`);
 }
 

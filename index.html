@@ -566,9 +566,100 @@ window.api = {
 // ════ EMAIL TAB ════
 var emPlaceholders = [];
 var emEditable = false;
+var emTemplates = [];
+var emCurrentTplId = null;
+
+// ── Template CRUD ──────────────────────────────────────────────────────────
+async function loadEmailTemplates() {
+  try {
+    var res = await fetch('/api/email-templates');
+    emTemplates = await res.json();
+    renderTplDropdown();
+  } catch(e) { console.error('Failed to load templates', e); }
+}
+
+function renderTplDropdown() {
+  var sel = document.getElementById('em-tpl-select');
+  if (!sel) return;
+  var cur = sel.value;
+  sel.innerHTML = '<option value="">— Select a template —</option>';
+  emTemplates.forEach(function(t) {
+    var opt = document.createElement('option');
+    opt.value = t.id; opt.textContent = t.name;
+    if (t.id === cur) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+function loadTemplate(id) {
+  emCurrentTplId = id || null;
+  var tpl = emTemplates.find(function(t){ return t.id === id; });
+  if (!tpl) { emCurrentTplId = null; return; }
+  document.getElementById('em-html-hidden').value = tpl.html;
+  emEditable = false;
+  parseTemplate();
+}
+
+function openSaveTplModal() {
+  var name = '';
+  if (emCurrentTplId) {
+    var tpl = emTemplates.find(function(t){ return t.id === emCurrentTplId; });
+    if (tpl) name = tpl.name;
+  }
+  var input = prompt('Template name:', name || '');
+  if (input === null) return;
+  if (!input.trim()) { alert('Please enter a name.'); return; }
+  var html = getSourceHtml();
+  if (!html.trim()) { alert('No HTML to save. Edit in the preview first or paste HTML.'); return; }
+  saveTpl(emCurrentTplId, input.trim(), html);
+}
+
+async function saveTpl(id, name, html) {
+  var isNew = !id;
+  var tplId = id || (Date.now().toString(36) + Math.random().toString(36).slice(2));
+  try {
+    var res = await fetch('/api/email-templates', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: tplId, name, html })
+    });
+    if (!res.ok) { alert('Failed to save template.'); return; }
+    if (isNew) emTemplates.push({ id: tplId, name, html });
+    else { var t = emTemplates.find(function(t){ return t.id===tplId; }); if(t){ t.name=name; t.html=html; } }
+    emCurrentTplId = tplId;
+    renderTplDropdown();
+    document.getElementById('em-tpl-select').value = tplId;
+  } catch(e) { alert('Error saving: ' + e.message); }
+}
+
+async function deleteTemplate() {
+  if (!emCurrentTplId) { alert('Select a template to delete.'); return; }
+  var tpl = emTemplates.find(function(t){ return t.id===emCurrentTplId; });
+  if (!tpl) return;
+  if (!confirm('Delete template "' + tpl.name + '"?')) return;
+  try {
+    await fetch('/api/email-templates/' + emCurrentTplId, { method: 'DELETE' });
+    emTemplates = emTemplates.filter(function(t){ return t.id !== emCurrentTplId; });
+    emCurrentTplId = null;
+    document.getElementById('em-html-hidden').value = '';
+    document.getElementById('em-fields').innerHTML = '';
+    document.getElementById('em-tpl-select').value = '';
+    renderTplDropdown();
+    var frame = document.getElementById('em-preview');
+    var doc = frame.contentDocument || frame.contentWindow.document;
+    doc.open(); doc.write(''); doc.close();
+    emEditable = false;
+  } catch(e) { alert('Error deleting: ' + e.message); }
+}
+
+function getSourceHtml() {
+  // If preview was edited, extract from iframe; otherwise use hidden field
+  if (emEditable) return getEditedHtml();
+  return document.getElementById('em-html-hidden').value;
+}
 
 function parseTemplate() {
-  var html = document.getElementById('em-html').value;
+  var html = document.getElementById('em-html-hidden').value;
   // Detect {{placeholders}}
   var matches = html.match(/\{\{([^}]+)\}\}/g) || [];
   var unique = [];
@@ -605,7 +696,7 @@ function applyPlaceholders(html) {
 
 function renderPreview() {
   var frame = document.getElementById('em-preview');
-  var raw = document.getElementById('em-html').value;
+  var raw = document.getElementById('em-html-hidden').value;
   if (!raw.trim()) return;
   var html = applyPlaceholders(raw);
   var doc = frame.contentDocument || frame.contentWindow.document;
@@ -663,7 +754,7 @@ function resetPreview() {
 }
 
 function getEditedHtml() {
-  if (!emEditable) return applyPlaceholders(document.getElementById('em-html').value);
+  if (!emEditable) return applyPlaceholders(document.getElementById('em-html-hidden').value);
   var frame = document.getElementById('em-preview');
   var doc = frame.contentDocument || frame.contentWindow.document;
   // Disable contenteditable before sending so it doesn't appear in final HTML
@@ -674,11 +765,21 @@ function getEditedHtml() {
   return html;
 }
 
+function saveCurrent() {
+  if (!emCurrentTplId) { openSaveTplModal(); return; }
+  var tpl = emTemplates.find(function(t){ return t.id===emCurrentTplId; });
+  if (!tpl) return;
+  var html = getEditedHtml();
+  // also update hidden field so placeholders still work
+  document.getElementById('em-html-hidden').value = html;
+  saveTpl(emCurrentTplId, tpl.name, html);
+}
+
 async function sendEmail() {
   var to = document.getElementById('em-to').value.trim();
   var subject = document.getElementById('em-subject').value.trim();
   var status = document.getElementById('em-status');
-  var raw = document.getElementById('em-html').value.trim();
+  var raw = document.getElementById('em-html-hidden').value.trim();
 
   if (!to)      { status.textContent='Please enter a recipient email.'; status.className='email-status err'; return; }
   if (!subject) { status.textContent='Please enter a subject.'; status.className='email-status err'; return; }
@@ -898,21 +999,26 @@ async function sendEmail() {
     <div class="email-left">
       <div class="email-panel-title">✉ Email Composer</div>
 
+      <!-- Template selector -->
+      <div class="email-section">
+        <label class="email-lbl">Template</label>
+        <div style="display:flex;gap:6px">
+          <select id="em-tpl-select" class="email-input" style="flex:1" onchange="loadTemplate(this.value)">
+            <option value="">— Select a template —</option>
+          </select>
+          <button class="btn" title="Save / update template" onclick="openSaveTplModal()">💾</button>
+          <button class="btn" title="Delete template" onclick="deleteTemplate()" style="color:var(--red)">🗑</button>
+        </div>
+      </div>
+
       <div class="email-section">
         <label class="email-lbl">Recipient Email</label>
-        <input id="em-to" type="email" class="email-input" placeholder="buyer@example.com" oninput="previewEmail()">
+        <input id="em-to" type="email" class="email-input" placeholder="buyer@example.com">
       </div>
 
       <div class="email-section">
         <label class="email-lbl">Subject</label>
-        <input id="em-subject" type="text" class="email-input" placeholder="Your order has shipped!" oninput="previewEmail()">
-      </div>
-
-      <div class="email-section">
-        <label class="email-lbl">HTML Template
-          <span class="email-hint">Use <code>{{name}}</code> style placeholders — fields appear below automatically</span>
-        </label>
-        <textarea id="em-html" class="email-textarea" placeholder="Paste your HTML here..." oninput="parseTemplate()"></textarea>
+        <input id="em-subject" type="text" class="email-input" placeholder="Your order has shipped!">
       </div>
 
       <div id="em-fields" class="email-fields"></div>
@@ -926,11 +1032,15 @@ async function sendEmail() {
       <div class="email-preview-bar">
         <span class="email-preview-label">● LIVE PREVIEW</span>
         <span class="email-preview-hint">Click any text to edit &nbsp;·&nbsp; Click images to change URL</span>
-        <button class="btn" style="margin-left:auto;font-size:11px;padding:4px 10px" onclick="resetPreview()" title="Reset to original HTML">↺ Reset</button>
+        <div style="margin-left:auto;display:flex;gap:6px">
+          <button class="btn" style="font-size:11px;padding:4px 10px" onclick="resetPreview()" title="Reset to original HTML">↺ Reset</button>
+          <button class="btn" style="font-size:11px;padding:4px 10px" onclick="saveCurrent()" title="Save edits back to template">💾 Save edits</button>
+        </div>
       </div>
       <iframe id="em-preview" class="email-preview-frame" sandbox="allow-same-origin"></iframe>
     </div>
   
+  <input type="hidden" id="em-html-hidden" value="">
   <!-- Image URL popup -->
   <div class="em-img-popup" id="em-img-popup" onclick="if(event.target===this)closeImgPopup()">
     <div class="em-img-box">
@@ -1092,7 +1202,7 @@ function switchTab(tab) {
   if (tab==='inventory') { document.getElementById('status-filter').value=''; activeChip=null; setChipActive(null); renderTable(); }
   if (tab==='dashboard') { buildCharts(); renderWeekly(); renderRecent(); }
   if (tab==='suppliers') { renderSuppliers(); }
-  if (tab==='emails') { parseTemplate(); }
+  if (tab==='emails') { loadEmailTemplates(); parseTemplate(); }
 }
 
 function chipFilter(status) {
