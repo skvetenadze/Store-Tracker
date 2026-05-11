@@ -84,7 +84,7 @@ app.use(session({
   secret: process.env.SESSION_SECRET || "resell-tracker-secret",
   resave: false,
   saveUninitialized: false,
-  cookie: { maxAge: 7 * 24 * 60 * 60 * 1000, httpOnly: true, sameSite: "lax" }
+  cookie: { httpOnly: true, sameSite: "lax" }  // session cookie — expires when browser closes
 }));
 
 // ── PIN middleware ────────────────────────────────────────────────────────
@@ -106,45 +106,50 @@ const PIN_PAGE = `<!DOCTYPE html>
 <title>Resell Tracker</title>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
-  body{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#1a1a2e;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
-  .pin-wrap{display:flex;flex-direction:column;align-items:center;gap:28px;padding:40px 32px;background:#16213e;border:1px solid #2a2a4a;border-radius:20px;width:320px}
-  .pin-icon{font-size:40px}
-  .pin-title{font-size:20px;font-weight:700;color:#fff}
-  .pin-sub{font-size:13px;color:#888}
-  .pin-dots{display:flex;gap:14px}
-  .pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid #444;transition:background .15s,border-color .15s}
-  .pin-dot.filled{background:#6c63ff;border-color:#6c63ff}
-  .pin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%}
-  .pin-btn{background:#1e1e3a;border:1px solid #2a2a4a;border-radius:12px;color:#fff;font-size:20px;font-weight:600;padding:16px;cursor:pointer;transition:background .15s,transform .1s}
-  .pin-btn:hover{background:#2a2a5a}
-  .pin-btn:active{transform:scale(.95)}
-  .pin-err{color:#ef4444;font-size:12px;min-height:16px;text-align:center}
+  body{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0d0d0d;font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif}
+  .pin-box{display:flex;flex-direction:column;align-items:center;gap:0;width:100%;max-width:320px;padding:20px}
+  .pin-logo{width:56px;height:56px;background:#1a4731;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:20px}
+  .pin-title{font-size:20px;font-weight:700;color:#f0f0f0;margin-bottom:6px}
+  .pin-sub{font-size:13px;color:#555;margin-bottom:32px}
+  .pin-dots{display:flex;gap:14px;margin-bottom:36px}
+  .pin-dot{width:16px;height:16px;border-radius:50%;border:2px solid #3a3a3a;background:transparent;transition:background .15s,border-color .15s,transform .1s}
+  .pin-dot.filled{background:#22c55e;border-color:#22c55e;transform:scale(1.1)}
+  .pin-dot.error{background:#f87171;border-color:#f87171}
+  .pin-pad{display:grid;grid-template-columns:repeat(3,72px);gap:12px}
+  .pin-key{width:72px;height:72px;border-radius:50%;border:1px solid #3a3a3a;background:#161616;color:#f0f0f0;font-size:22px;font-weight:600;cursor:pointer;transition:background .1s,transform .1s;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;user-select:none}
+  .pin-key:hover{background:#1e1e1e}
+  .pin-key:active{background:#272727;transform:scale(.93)}
+  .pin-key.empty{border:none;background:none;cursor:default;pointer-events:none}
+  .pin-key.del{font-size:18px;color:#aaa}
+  .pin-err{margin-top:20px;font-size:13px;font-weight:600;color:#f87171;min-height:20px;text-align:center}
+  @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+  .shake{animation:shake .35s ease}
 </style>
 </head>
 <body>
-<div class="pin-wrap">
-  <div class="pin-icon">📦</div>
+<div class="pin-box">
+  <div class="pin-logo">&#128230;</div>
   <div class="pin-title">Resell Tracker</div>
   <div class="pin-sub">Enter your 4-digit passcode</div>
-  <div class="pin-dots">
+  <div class="pin-dots" id="pin-dots">
     <div class="pin-dot" id="d0"></div>
     <div class="pin-dot" id="d1"></div>
     <div class="pin-dot" id="d2"></div>
     <div class="pin-dot" id="d3"></div>
   </div>
-  <div class="pin-grid">
-    <button class="pin-btn" onclick="pk('1')">1</button>
-    <button class="pin-btn" onclick="pk('2')">2</button>
-    <button class="pin-btn" onclick="pk('3')">3</button>
-    <button class="pin-btn" onclick="pk('4')">4</button>
-    <button class="pin-btn" onclick="pk('5')">5</button>
-    <button class="pin-btn" onclick="pk('6')">6</button>
-    <button class="pin-btn" onclick="pk('7')">7</button>
-    <button class="pin-btn" onclick="pk('8')">8</button>
-    <button class="pin-btn" onclick="pk('9')">9</button>
-    <div></div>
-    <button class="pin-btn" onclick="pk('0')">0</button>
-    <button class="pin-btn" onclick="pdel()">&#9003;</button>
+  <div class="pin-pad">
+    <button class="pin-key" onclick="pk('1')">1</button>
+    <button class="pin-key" onclick="pk('2')">2</button>
+    <button class="pin-key" onclick="pk('3')">3</button>
+    <button class="pin-key" onclick="pk('4')">4</button>
+    <button class="pin-key" onclick="pk('5')">5</button>
+    <button class="pin-key" onclick="pk('6')">6</button>
+    <button class="pin-key" onclick="pk('7')">7</button>
+    <button class="pin-key" onclick="pk('8')">8</button>
+    <button class="pin-key" onclick="pk('9')">9</button>
+    <button class="pin-key empty"></button>
+    <button class="pin-key" onclick="pk('0')">0</button>
+    <button class="pin-key del" onclick="pdel()">&#9003;</button>
   </div>
   <div class="pin-err" id="pin-err"></div>
 </div>
