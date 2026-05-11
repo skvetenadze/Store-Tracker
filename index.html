@@ -476,6 +476,37 @@ tbody tr.selected { background:rgba(34,197,94,0.07) !important; }
   transition:color .15s, border-color .15s;
 }
 .lock-btn:hover { color:var(--red); border-color:var(--red); }
+
+/* ── Email Tab ─────────────────────────────────────────────────────── */
+.email-layout { display:flex; gap:0; height:calc(100vh - 110px); overflow:hidden; }
+.email-left { width:380px; flex-shrink:0; padding:20px; overflow-y:auto; border-right:1px solid var(--border); display:flex; flex-direction:column; gap:0; }
+.email-panel-title { font-size:15px; font-weight:700; color:var(--text); margin-bottom:16px; }
+.email-section { display:flex; flex-direction:column; gap:5px; margin-bottom:14px; }
+.email-lbl { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.6px; color:var(--text3); }
+.email-hint { font-size:10px; font-weight:400; text-transform:none; letter-spacing:0; color:var(--text3); margin-left:6px; }
+.email-hint code { background:var(--bg3); border:1px solid var(--border); border-radius:3px; padding:1px 4px; font-size:10px; color:var(--accent); }
+.email-input { background:var(--bg3); border:1px solid var(--border); border-radius:var(--radius); padding:8px 10px; color:var(--text); font-size:13px; outline:none; transition:border-color .15s; }
+.email-input:focus { border-color:var(--accent); }
+.email-textarea { background:var(--bg3); border:1px solid var(--border); border-radius:var(--radius); padding:10px; color:var(--text); font-size:12px; font-family:monospace; resize:vertical; min-height:160px; outline:none; transition:border-color .15s; }
+.email-textarea:focus { border-color:var(--accent); }
+.email-fields { display:flex; flex-direction:column; gap:10px; }
+.email-field-row { display:flex; flex-direction:column; gap:4px; }
+.email-field-lbl { font-size:11px; font-weight:600; color:var(--text2); text-transform:capitalize; }
+.email-field-input { background:var(--bg3); border:1px solid var(--border); border-radius:var(--radius); padding:7px 10px; color:var(--text); font-size:13px; outline:none; transition:border-color .15s; }
+.email-field-input:focus { border-color:var(--accent); }
+.email-right { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+.email-preview-bar { background:var(--bg2); border-bottom:1px solid var(--border); padding:8px 16px; display:flex; align-items:center; gap:8px; }
+.email-preview-label { font-size:10px; font-weight:700; letter-spacing:.8px; color:#22c55e; }
+.email-preview-frame { flex:1; border:none; background:#fff; width:100%; }
+.email-status { margin-top:10px; font-size:12px; font-weight:600; text-align:center; min-height:20px; }
+.email-status.ok { color:#22c55e; }
+.email-status.err { color:var(--red); }
+@media(max-width:768px){
+  .email-layout { flex-direction:column; height:auto; }
+  .email-left { width:100%; border-right:none; border-bottom:1px solid var(--border); }
+  .email-right { height:420px; }
+}
+
 </style>
 
 <script>
@@ -526,6 +557,94 @@ window.api = {
     return true;
   }
 };
+
+// ════ EMAIL TAB ════
+var emPlaceholders = [];
+
+function parseTemplate() {
+  var html = document.getElementById('em-html').value;
+  var matches = html.match(/\{\{([^}]+)\}\}/g) || [];
+  var unique = [];
+  matches.forEach(function(m) {
+    var key = m.replace(/[{}]/g,'').trim();
+    if (unique.indexOf(key) < 0) unique.push(key);
+  });
+  emPlaceholders = unique;
+
+  var container = document.getElementById('em-fields');
+  // Keep existing values
+  var existing = {};
+  container.querySelectorAll('.email-field-input').forEach(function(inp) {
+    existing[inp.dataset.key] = inp.value;
+  });
+  container.innerHTML = unique.length ? '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text3);margin-bottom:6px">Placeholders</div>' : '';
+  unique.forEach(function(key) {
+    var row = document.createElement('div');
+    row.className = 'email-field-row';
+    var lbl = document.createElement('div');
+    lbl.className = 'email-field-lbl';
+    lbl.textContent = key.replace(/_/g,' ');
+    var inp = document.createElement('input');
+    inp.type = 'text';
+    inp.className = 'email-field-input';
+    inp.dataset.key = key;
+    inp.placeholder = 'Enter ' + key;
+    inp.value = existing[key] || '';
+    inp.addEventListener('input', previewEmail);
+    row.appendChild(lbl);
+    row.appendChild(inp);
+    container.appendChild(row);
+  });
+  previewEmail();
+}
+
+function buildEmailHtml() {
+  var html = document.getElementById('em-html').value;
+  document.querySelectorAll('.email-field-input').forEach(function(inp) {
+    var regex = new RegExp('\\{\\{' + inp.dataset.key.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '\\}\\}','g');
+    html = html.replace(regex, inp.value || ('{{' + inp.dataset.key + '}}'));
+  });
+  return html;
+}
+
+function previewEmail() {
+  var frame = document.getElementById('em-preview');
+  var html = buildEmailHtml();
+  var doc = frame.contentDocument || frame.contentWindow.document;
+  doc.open(); doc.write(html); doc.close();
+}
+
+async function sendEmail() {
+  var to = document.getElementById('em-to').value.trim();
+  var subject = document.getElementById('em-subject').value.trim();
+  var html = buildEmailHtml();
+  var status = document.getElementById('em-status');
+
+  if (!to) { status.textContent = 'Please enter a recipient email.'; status.className='email-status err'; return; }
+  if (!subject) { status.textContent = 'Please enter a subject.'; status.className='email-status err'; return; }
+  if (!html.trim()) { status.textContent = 'Please paste your HTML template.'; status.className='email-status err'; return; }
+
+  status.textContent = 'Sending...'; status.className = 'email-status';
+  try {
+    var res = await fetch('/api/send-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ to, subject, html })
+    });
+    var data = await res.json();
+    if (res.ok) {
+      status.textContent = '✓ Email sent to ' + to;
+      status.className = 'email-status ok';
+    } else {
+      status.textContent = '✗ ' + (data.error || 'Failed to send');
+      status.className = 'email-status err';
+    }
+  } catch(e) {
+    status.textContent = '✗ Network error';
+    status.className = 'email-status err';
+  }
+}
+
 </script>
 
 </head>
@@ -574,6 +693,7 @@ window.api = {
     <button class="nav-tab active" id="tab-dashboard" onclick="switchTab('dashboard')">⊞ Dashboard</button>
     <button class="nav-tab"        id="tab-inventory" onclick="switchTab('inventory')">🏠 Inventory</button>
     <button class="nav-tab"        id="tab-suppliers" onclick="switchTab('suppliers')">🤝 Suppliers</button>
+    <button class="nav-tab"        id="tab-emails"    onclick="switchTab('emails')">✉ Emails</button>
     <button class="nav-tab"        id="tab-settings"  onclick="switchTab('settings')">⚙ Settings</button>
   </div>
   <div class="nav-actions">
@@ -719,6 +839,46 @@ window.api = {
 </div>
 
 <!-- SUPPLIERS VIEW -->
+
+<div class="view" id="view-emails">
+  <div class="email-layout">
+    <!-- LEFT PANEL -->
+    <div class="email-left">
+      <div class="email-panel-title">✉ Email Composer</div>
+
+      <div class="email-section">
+        <label class="email-lbl">Recipient Email</label>
+        <input id="em-to" type="email" class="email-input" placeholder="buyer@example.com" oninput="previewEmail()">
+      </div>
+
+      <div class="email-section">
+        <label class="email-lbl">Subject</label>
+        <input id="em-subject" type="text" class="email-input" placeholder="Your order has shipped!" oninput="previewEmail()">
+      </div>
+
+      <div class="email-section">
+        <label class="email-lbl">HTML Template
+          <span class="email-hint">Use <code>{{name}}</code> style placeholders — fields appear below automatically</span>
+        </label>
+        <textarea id="em-html" class="email-textarea" placeholder="Paste your HTML here..." oninput="parseTemplate()"></textarea>
+      </div>
+
+      <div id="em-fields" class="email-fields"></div>
+
+      <button class="btn btn-primary" style="width:100%;margin-top:12px" onclick="sendEmail()">⬆ Send Email</button>
+      <div id="em-status" class="email-status"></div>
+    </div>
+
+    <!-- RIGHT PANEL: live preview -->
+    <div class="email-right">
+      <div class="email-preview-bar">
+        <span class="email-preview-label">● LIVE PREVIEW</span>
+      </div>
+      <iframe id="em-preview" class="email-preview-frame" sandbox="allow-same-origin"></iframe>
+    </div>
+  </div>
+</div>
+
 <div class="view" id="view-suppliers">
   <div class="sup-area">
     <div class="sup-hdr">
@@ -853,19 +1013,20 @@ function closeSettingsBg(e) { if(e.target===document.getElementById('settings-ov
 function switchTab(tab) {
   if (tab==='settings') { openSettings(); return; }
   currentTab = tab;
-  ['dashboard','inventory','suppliers'].forEach(function(t) {
+  ['dashboard','inventory','suppliers','emails'].forEach(function(t) {
     var te=document.getElementById('tab-'+t), ve=document.getElementById('view-'+t);
     if(te) te.classList.toggle('active',t===tab);
     if(ve) ve.classList.toggle('active',t===tab);
   });
   document.getElementById('tab-settings').classList.remove('active');
   // Sync bottom nav
-  ['dashboard','inventory','suppliers','settings'].forEach(function(t){
+  ['dashboard','inventory','suppliers','emails','settings'].forEach(function(t){
     var el=document.getElementById('bnav-'+t); if(el) el.classList.toggle('active',t===tab);
   });
   if (tab==='inventory') { document.getElementById('status-filter').value=''; activeChip=null; setChipActive(null); renderTable(); }
   if (tab==='dashboard') { buildCharts(); renderWeekly(); renderRecent(); }
   if (tab==='suppliers') { renderSuppliers(); }
+  if (tab==='emails') { parseTemplate(); }
 }
 
 function chipFilter(status) {
@@ -1561,6 +1722,9 @@ init();
     <button class="bnav-tab" id="bnav-suppliers" onclick="switchTab('suppliers')">
       <span class="bnav-icon">🤝</span>
       <span class="bnav-label">Suppliers</span>
+    </button>
+    <button class="bnav-tab" id="bnav-emails" onclick="switchTab('emails')">
+      <span class="bnav-icon">✉</span><span class="bnav-label">Emails</span>
     </button>
     <button class="bnav-tab" id="bnav-settings" onclick="switchTab('settings')">
       <span class="bnav-icon">⚙</span>

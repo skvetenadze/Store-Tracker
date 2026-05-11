@@ -210,6 +210,35 @@ app.post("/api/suppliers", requirePin, async (req, res) => {
   }
 });
 
+app.post("/api/send-email", requirePin, async (req, res) => {
+  const { to, subject, html } = req.body;
+  const apiKey = process.env.RESEND_API_KEY;
+
+  if (!apiKey) return res.status(500).json({ error: "RESEND_API_KEY not set in env variables" });
+  if (!to || !subject || !html) return res.status(400).json({ error: "Missing to, subject, or html" });
+
+  try {
+    const r = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        from: process.env.EMAIL_FROM || "Resell Tracker <onboarding@resend.dev>",
+        to: [to],
+        subject,
+        html
+      })
+    });
+    const data = await r.json();
+    if (r.ok) {
+      res.json({ success: true, id: data.id });
+    } else {
+      res.status(500).json({ error: data.message || "Resend error" });
+    }
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
