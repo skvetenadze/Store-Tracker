@@ -32,7 +32,7 @@ async function sendBreachAlert(ip, count) {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        from: "Resell Tracker <onboarding@resend.dev>",
+        from: "Inventory Tracker <onboarding@resend.dev>",
         to: [to],
         subject: "⚠️ Resell Tracker — Wrong PIN Alert",
         html: `
@@ -335,7 +335,7 @@ app.post("/api/send-email", requirePin, async (req, res) => {
       method: "POST",
       headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        from: process.env.EMAIL_FROM || "Resell Tracker <onboarding@resend.dev>",
+        from: process.env.EMAIL_FROM || "Inventory Tracker <onboarding@resend.dev>",
         to: [to], subject, html
       })
     });
