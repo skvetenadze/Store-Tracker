@@ -501,6 +501,11 @@ tbody tr.selected { background:rgba(34,197,94,0.07) !important; }
 .email-status { margin-top:10px; font-size:12px; font-weight:600; text-align:center; min-height:20px; }
 .email-status.ok { color:#22c55e; }
 .email-status.err { color:var(--red); }
+.email-preview-hint { font-size:10px; color:var(--text3); margin-left:10px; }
+.em-img-popup { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:9999; align-items:center; justify-content:center; }
+.em-img-box { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius-lg); padding:20px; display:flex; flex-direction:column; gap:10px; min-width:340px; }
+.em-img-title { font-size:13px; font-weight:700; color:var(--text); }
+.em-img-actions { display:flex; gap:8px; justify-content:flex-end; }
 @media(max-width:768px){
   .email-layout { flex-direction:column; height:auto; }
   .email-left { width:100%; border-right:none; border-bottom:1px solid var(--border); }
@@ -560,9 +565,11 @@ window.api = {
 
 // ════ EMAIL TAB ════
 var emPlaceholders = [];
+var emEditable = false;
 
 function parseTemplate() {
   var html = document.getElementById('em-html').value;
+  // Detect {{placeholders}}
   var matches = html.match(/\{\{([^}]+)\}\}/g) || [];
   var unique = [];
   matches.forEach(function(m) {
@@ -572,77 +579,122 @@ function parseTemplate() {
   emPlaceholders = unique;
 
   var container = document.getElementById('em-fields');
-  // Keep existing values
   var existing = {};
   container.querySelectorAll('.email-field-input').forEach(function(inp) {
     existing[inp.dataset.key] = inp.value;
   });
-  container.innerHTML = unique.length ? '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text3);margin-bottom:6px">Placeholders</div>' : '';
+  container.innerHTML = unique.length ? '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text3);margin-bottom:8px">Placeholders</div>' : '';
   unique.forEach(function(key) {
     var row = document.createElement('div');
     row.className = 'email-field-row';
-    var lbl = document.createElement('div');
-    lbl.className = 'email-field-lbl';
-    lbl.textContent = key.replace(/_/g,' ');
-    var inp = document.createElement('input');
-    inp.type = 'text';
-    inp.className = 'email-field-input';
-    inp.dataset.key = key;
-    inp.placeholder = 'Enter ' + key;
-    inp.value = existing[key] || '';
-    inp.addEventListener('input', previewEmail);
-    row.appendChild(lbl);
-    row.appendChild(inp);
-    container.appendChild(row);
+    var lbl = document.createElement('div'); lbl.className = 'email-field-lbl'; lbl.textContent = key.replace(/_/g,' ');
+    var inp = document.createElement('input'); inp.type='text'; inp.className='email-field-input'; inp.dataset.key=key; inp.placeholder='Enter '+key; inp.value=existing[key]||'';
+    inp.addEventListener('input', renderPreview);
+    row.appendChild(lbl); row.appendChild(inp); container.appendChild(row);
   });
-  previewEmail();
+  renderPreview();
 }
 
-function buildEmailHtml() {
-  var html = document.getElementById('em-html').value;
+function applyPlaceholders(html) {
   document.querySelectorAll('.email-field-input').forEach(function(inp) {
-    var regex = new RegExp('\\{\\{' + inp.dataset.key.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '\\}\\}','g');
+    var key = inp.dataset.key.replace(/[-[\]{}()*+?.,\\^$|#\s]/g,'\\$&'); var regex = new RegExp('\\{\\{' + key + '\\}\\}','g');
     html = html.replace(regex, inp.value || ('{{' + inp.dataset.key + '}}'));
   });
   return html;
 }
 
-function previewEmail() {
+function renderPreview() {
   var frame = document.getElementById('em-preview');
-  var html = buildEmailHtml();
+  var raw = document.getElementById('em-html').value;
+  if (!raw.trim()) return;
+  var html = applyPlaceholders(raw);
   var doc = frame.contentDocument || frame.contentWindow.document;
   doc.open(); doc.write(html); doc.close();
+  enableEditing(doc);
+  emEditable = true;
+}
+
+function enableEditing(doc) {
+  // Make body directly editable
+  if (doc.body) {
+    doc.body.contentEditable = 'true';
+    doc.body.style.outline = 'none';
+    doc.body.style.cursor = 'text';
+  }
+
+  // Image click → show URL editor popup
+  doc.querySelectorAll('img').forEach(function(img) {
+    img.style.cursor = 'pointer';
+    img.style.outline = 'none';
+    img.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      var current = img.src || '';
+      var popup = document.getElementById('em-img-popup');
+      var inp = document.getElementById('em-img-url');
+      inp.value = current;
+      popup.style.display = 'flex';
+      inp.focus(); inp.select();
+      window._emImgTarget = img;
+    });
+  });
+
+  // Link click prevention
+  doc.querySelectorAll('a').forEach(function(a) {
+    a.addEventListener('click', function(e) { e.preventDefault(); });
+  });
+}
+
+function applyImgUrl() {
+  var inp = document.getElementById('em-img-url');
+  var img = window._emImgTarget;
+  if (img && inp.value.trim()) img.src = inp.value.trim();
+  closeImgPopup();
+}
+
+function closeImgPopup() {
+  document.getElementById('em-img-popup').style.display = 'none';
+  window._emImgTarget = null;
+}
+
+function resetPreview() {
+  emEditable = false;
+  renderPreview();
+}
+
+function getEditedHtml() {
+  if (!emEditable) return applyPlaceholders(document.getElementById('em-html').value);
+  var frame = document.getElementById('em-preview');
+  var doc = frame.contentDocument || frame.contentWindow.document;
+  // Disable contenteditable before sending so it doesn't appear in final HTML
+  if (doc.body) doc.body.removeAttribute('contenteditable');
+  var html = doc.documentElement ? doc.documentElement.outerHTML : doc.body.innerHTML;
+  // Re-enable after extraction
+  if (doc.body) doc.body.contentEditable = 'true';
+  return html;
 }
 
 async function sendEmail() {
   var to = document.getElementById('em-to').value.trim();
   var subject = document.getElementById('em-subject').value.trim();
-  var html = buildEmailHtml();
   var status = document.getElementById('em-status');
+  var raw = document.getElementById('em-html').value.trim();
 
-  if (!to) { status.textContent = 'Please enter a recipient email.'; status.className='email-status err'; return; }
-  if (!subject) { status.textContent = 'Please enter a subject.'; status.className='email-status err'; return; }
-  if (!html.trim()) { status.textContent = 'Please paste your HTML template.'; status.className='email-status err'; return; }
+  if (!to)      { status.textContent='Please enter a recipient email.'; status.className='email-status err'; return; }
+  if (!subject) { status.textContent='Please enter a subject.'; status.className='email-status err'; return; }
+  if (!raw)     { status.textContent='Please paste your HTML template.'; status.className='email-status err'; return; }
 
+  var html = getEditedHtml();
   status.textContent = 'Sending...'; status.className = 'email-status';
   try {
     var res = await fetch('/api/send-email', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ to, subject, html })
     });
     var data = await res.json();
-    if (res.ok) {
-      status.textContent = '✓ Email sent to ' + to;
-      status.className = 'email-status ok';
-    } else {
-      status.textContent = '✗ ' + (data.error || 'Failed to send');
-      status.className = 'email-status err';
-    }
-  } catch(e) {
-    status.textContent = '✗ Network error';
-    status.className = 'email-status err';
-  }
+    if (res.ok) { status.textContent='✓ Email sent to '+to; status.className='email-status ok'; }
+    else        { status.textContent='✗ '+(data.error||'Failed to send'); status.className='email-status err'; }
+  } catch(e) { status.textContent='✗ Network error'; status.className='email-status err'; }
 }
 
 </script>
@@ -873,10 +925,24 @@ async function sendEmail() {
     <div class="email-right">
       <div class="email-preview-bar">
         <span class="email-preview-label">● LIVE PREVIEW</span>
+        <span class="email-preview-hint">Click any text to edit &nbsp;·&nbsp; Click images to change URL</span>
+        <button class="btn" style="margin-left:auto;font-size:11px;padding:4px 10px" onclick="resetPreview()" title="Reset to original HTML">↺ Reset</button>
       </div>
       <iframe id="em-preview" class="email-preview-frame" sandbox="allow-same-origin"></iframe>
     </div>
+  
+  <!-- Image URL popup -->
+  <div class="em-img-popup" id="em-img-popup" onclick="if(event.target===this)closeImgPopup()">
+    <div class="em-img-box">
+      <div class="em-img-title">🖼 Change Image URL</div>
+      <input id="em-img-url" type="text" class="email-input" placeholder="https://..." style="width:100%">
+      <div class="em-img-actions">
+        <button class="btn" onclick="closeImgPopup()">Cancel</button>
+        <button class="btn btn-primary" onclick="applyImgUrl()">Apply</button>
+      </div>
+    </div>
   </div>
+</div>
 </div>
 
 <div class="view" id="view-suppliers">
