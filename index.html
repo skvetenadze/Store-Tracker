@@ -1178,6 +1178,7 @@ async function saveItem(){
 
   if(currentTab === 'dashboard'){
     buildCharts();
+    renderWeekly();
     renderRecent();
   }
 }
@@ -1533,6 +1534,7 @@ async function loadApp(){
   updateStats();
   renderTable();
   buildCharts();
+  renderWeekly();
   renderRecent();
 }
 
