@@ -388,22 +388,8 @@ tbody tr.selected { background:rgba(34,197,94,0.07) !important; }
   transition:color .15s, border-color .15s;
 }
 .bulk-deselect:hover { color:var(--text); border-color:var(--border3); }
-.bulk-summary {
-  position:fixed; bottom:0; left:0; right:0;
-  background:var(--bg3);
-  border-top:1px solid var(--border);
-  padding:7px 20px;
-  display:none; align-items:center; gap:0;
-  z-index:399;
-  transform:translateY(100%);
-  transition:transform .2s cubic-bezier(.4,0,.2,1);
-}
-.bulk-summary.visible { display:flex; transform:translateY(0); }
-.bulk-bar.visible ~ .bulk-summary { transform:translateY(57px); }
-.bulk-sum-item { display:flex; align-items:center; gap:6px; padding:0 18px; border-right:1px solid var(--border); }
-.bulk-sum-item:first-child { padding-left:0; }
-.bulk-sum-item:last-child { border-right:none; }
-.bulk-sum-lbl { font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.5px; color:var(--text3); }
+.bulk-sum-block { display:flex; flex-direction:column; align-items:center; gap:1px; white-space:nowrap; }
+.bulk-sum-lbl { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--text3); }
 .bulk-sum-val { font-size:13px; font-weight:800; }
 
 @media (max-width:768px) {
@@ -1704,14 +1690,11 @@ var selectedIds = new Set();
 
 function updateBulkBar() {
   var bar = document.getElementById('bulk-bar');
-  var summary = document.getElementById('bulk-summary');
   var cnt = document.getElementById('bulk-count');
   var n = selectedIds.size;
   if (n > 0) {
     bar.classList.add('visible');
     cnt.textContent = n + ' selected';
-    summary.classList.add('visible');
-    // Calculate totals from selected items
     var totalCost = 0, totalSold = 0;
     items.forEach(function(i) {
       if (!selectedIds.has(i.id)) return;
@@ -1721,12 +1704,11 @@ function updateBulkBar() {
     var profit = totalSold - totalCost;
     document.getElementById('sum-cost').textContent = '$' + totalCost.toFixed(2);
     document.getElementById('sum-sold').textContent = '$' + totalSold.toFixed(2);
-    document.getElementById('sum-profit').textContent = '$' + profit.toFixed(2);
-    document.getElementById('sum-profit').className = 'bulk-sum-val ' + (profit >= 0 ? 'col-green' : 'col-red');
-    document.getElementById('sum-count').textContent = n;
+    var profitEl = document.getElementById('sum-profit');
+    profitEl.textContent = '$' + profit.toFixed(2);
+    profitEl.className = 'bulk-sum-val ' + (profit >= 0 ? 'col-green' : 'col-red');
   } else {
     bar.classList.remove('visible');
-    summary.classList.remove('visible');
   }
   // Sync select-all checkbox state
   var allBox = document.getElementById('check-all');
@@ -1994,25 +1976,6 @@ init();
 
 
 <!-- BULK ACTION BAR -->
-<div class="bulk-summary" id="bulk-summary">
-  <div class="bulk-sum-item">
-    <span class="bulk-sum-lbl">Total Cost</span>
-    <span class="bulk-sum-val col-red" id="sum-cost">$0.00</span>
-  </div>
-  <div class="bulk-sum-item">
-    <span class="bulk-sum-lbl">Total Sold</span>
-    <span class="bulk-sum-val col-text" id="sum-sold">$0.00</span>
-  </div>
-  <div class="bulk-sum-item">
-    <span class="bulk-sum-lbl">Profit</span>
-    <span class="bulk-sum-val col-green" id="sum-profit">$0.00</span>
-  </div>
-  <div class="bulk-sum-item">
-    <span class="bulk-sum-lbl">Items</span>
-    <span class="bulk-sum-val col-text" id="sum-count">0</span>
-  </div>
-</div>
-
 <div class="bulk-bar" id="bulk-bar">
   <span class="bulk-count" id="bulk-count">0 selected</span>
   <div class="bulk-divider"></div>
@@ -2044,6 +2007,22 @@ init();
   <button class="bulk-apply" onclick="applyBulk()">Apply</button>
   <button class="bulk-apply danger" onclick="deleteBulk()">Delete</button>
   <button class="bulk-deselect" onclick="clearSelection()">✕ Deselect all</button>
+
+  <div class="bulk-divider"></div>
+  <span class="bulk-sum-block">
+    <span class="bulk-sum-lbl">Cost</span>
+    <span class="bulk-sum-val col-red" id="sum-cost">$0.00</span>
+  </span>
+  <div class="bulk-divider"></div>
+  <span class="bulk-sum-block">
+    <span class="bulk-sum-lbl">Sold</span>
+    <span class="bulk-sum-val" id="sum-sold">$0.00</span>
+  </span>
+  <div class="bulk-divider"></div>
+  <span class="bulk-sum-block">
+    <span class="bulk-sum-lbl">Profit</span>
+    <span class="bulk-sum-val col-green" id="sum-profit">$0.00</span>
+  </span>
 </div>
 
 </body>
