@@ -267,7 +267,7 @@ const PIN_PAGE = `<!DOCTYPE html>
     var bytes = new Uint8Array(buf);
     var bin = '';
     for(var i=0;i<bytes.length;i++) bin += String.fromCharCode(bytes[i]);
-    return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+    return btoa(bin).replace(/[+]/g,'-').replace(/[/]/g,'_').replace(/=/g,'');
   }
 
   checkBiometric();

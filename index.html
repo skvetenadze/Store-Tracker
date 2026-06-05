@@ -2101,7 +2101,7 @@ function b64ToBuffer(b64){
 function bufToB64(buf){
   var bytes=new Uint8Array(buf), bin='';
   for(var i=0;i<bytes.length;i++) bin+=String.fromCharCode(bytes[i]);
-  return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+  return btoa(bin).replace(/[+]/g,'-').replace(/[/]/g,'_').replace(/=/g,'');
 }
 
 </script>
