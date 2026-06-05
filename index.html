@@ -1359,7 +1359,7 @@ function buildCharts() {
     var raw = (item.status === 'SOLD' && item.sold_at)
       ? item.sold_at
       : (item.updatedAt || item.updatedat);
-    var t = raw ? new Date(raw).getTime() : (now - 1);
+    var t = raw ? new Date(raw).getTime() : null; if(!t) return; // skip items with no real timestamp
 
     for(var j=0; j<buckets.length; j++){
       var b = buckets[j];
