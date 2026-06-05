@@ -1366,17 +1366,25 @@ function drawChart(id, vals, color, labels, isDollar) {
   var svg=document.getElementById(id); if(!svg) return;
   var W=300,H=90,pL=30,pR=8,pT=8,pB=22,iW=W-pL-pR,iH=H-pT-pB,n=vals.length;
   var max=0; for(var i=0;i<n;i++) if(vals[i]>max) max=vals[i]; if(max===0) max=1;
-  function px(i){return pL+(i/(n-1))*iW;} function py(v){return pT+iH-(v/max)*iH;}
+  function py(v){return pT+iH-(v/max)*iH;}
   var html='';
-  [0,max*0.5,max].forEach(function(tv){ var ty=py(tv); var lbl=isDollar?(tv>=1000?'$'+(tv/1000).toFixed(1)+'k':'$'+tv.toFixed(0)):tv.toFixed(0); html+='<text x="'+(pL-3)+'" y="'+(ty+4)+'" text-anchor="end" fill="currentColor" font-size="8" opacity="0.45">'+lbl+'</text><line x1="'+pL+'" y1="'+ty+'" x2="'+(W-pR)+'" y2="'+ty+'" stroke="currentColor" stroke-width="0.5" opacity="0.1"/>'; });
-  [0,Math.floor(n/3),Math.floor(2*n/3),n-1].forEach(function(si){ html+='<text x="'+px(si)+'" y="'+(H-5)+'" text-anchor="middle" fill="currentColor" font-size="8" opacity="0.4">'+labels[si]+'</text>'; });
-  var pts=''; for(var pi=0;pi<n;pi++){if(pi>0)pts+=' '; pts+=px(pi).toFixed(1)+','+py(vals[pi]).toFixed(1);}
-  var area='M '+px(0).toFixed(1)+','+(pT+iH).toFixed(1); for(var ai=0;ai<n;ai++) area+=' L '+px(ai).toFixed(1)+','+py(vals[ai]).toFixed(1); area+=' L '+px(n-1).toFixed(1)+','+(pT+iH).toFixed(1)+' Z';
   var gid='g'+id;
-  html+='<defs><linearGradient id="'+gid+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="'+color+'" stop-opacity="0.3"/><stop offset="100%" stop-color="'+color+'" stop-opacity="0.02"/></linearGradient></defs>';
-  html+='<path d="'+area+'" fill="url(#'+gid+')"/>';
-  html+='<polyline points="'+pts+'" fill="none" stroke="'+color+'" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
-  for(var di=0;di<n;di++) if(vals[di]>0) html+='<circle cx="'+px(di).toFixed(1)+'" cy="'+py(vals[di]).toFixed(1)+'" r="3" fill="'+color+'"/>';
+  html+='<defs><linearGradient id="'+gid+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="'+color+'" stop-opacity="0.85"/><stop offset="100%" stop-color="'+color+'" stop-opacity="0.3"/></linearGradient></defs>';
+  // Grid lines + y-axis labels
+  [0,max*0.5,max].forEach(function(tv){ var ty=py(tv); var lbl=isDollar?(tv>=1000?'$'+(tv/1000).toFixed(1)+'k':'$'+tv.toFixed(0)):tv.toFixed(0); html+='<text x="'+(pL-3)+'" y="'+(ty+4)+'" text-anchor="end" fill="currentColor" font-size="8" opacity="0.45">'+lbl+'</text><line x1="'+pL+'" y1="'+ty+'" x2="'+(W-pR)+'" y2="'+ty+'" stroke="currentColor" stroke-width="0.5" opacity="0.1"/>'; });
+  // Bars
+  var gap=2, barW=(iW/n)-gap;
+  for(var i=0;i<n;i++){
+    var bx=pL+(i/n)*iW+(gap/2);
+    var bh=(vals[i]/max)*iH; if(bh<0) bh=0;
+    var by=pT+iH-bh;
+    html+='<rect x="'+bx.toFixed(1)+'" y="'+by.toFixed(1)+'" width="'+barW.toFixed(1)+'" height="'+Math.max(bh,0).toFixed(1)+'" rx="2" fill="url(#'+gid+')" opacity="'+(vals[i]>0?'1':'0.18')+'"/>';
+  }
+  // X-axis labels
+  [0,Math.floor(n/3),Math.floor(2*n/3),n-1].forEach(function(si){
+    var lx=pL+(si/n)*iW+(gap/2)+barW/2;
+    html+='<text x="'+lx.toFixed(1)+'" y="'+(H-5)+'" text-anchor="middle" fill="currentColor" font-size="8" opacity="0.4">'+labels[si]+'</text>';
+  });
   svg.innerHTML=html;
 }
 
