@@ -114,7 +114,7 @@ const PIN_PAGE = `<!DOCTYPE html>
   .pin-box{display:flex;flex-direction:column;align-items:center;gap:0;width:100%;max-width:320px;padding:20px}
   .pin-logo{width:56px;height:56px;background:#1a4731;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:20px}
   .pin-title{font-size:20px;font-weight:700;color:#f0f0f0;margin-bottom:6px}
-  .pin-sub{font-size:13px;color:#555;margin-bottom:32px}
+  .pin-sub{font-size:13px;color:#555;margin-bottom:32px;text-align:center}
   .pin-dots{display:flex;gap:14px;margin-bottom:36px}
   .pin-dot{width:16px;height:16px;border-radius:50%;border:2px solid #3a3a3a;background:transparent;transition:background .15s,border-color .15s,transform .1s}
   .pin-dot.filled{background:#22c55e;border-color:#22c55e;transform:scale(1.1)}
@@ -128,32 +128,54 @@ const PIN_PAGE = `<!DOCTYPE html>
   .pin-err{margin-top:20px;font-size:13px;font-weight:600;color:#f87171;min-height:20px;text-align:center}
   @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
   .shake{animation:shake .35s ease}
+  .biometric-btn{margin-top:24px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;-webkit-tap-highlight-color:transparent;border:none;background:none;color:#f0f0f0;padding:0}
+  .biometric-icon{width:56px;height:56px;border-radius:16px;background:#1a1a1a;border:1px solid #2a2a2a;display:flex;align-items:center;justify-content:center;font-size:28px;transition:background .15s,transform .1s}
+  .biometric-btn:active .biometric-icon{background:#272727;transform:scale(.93)}
+  .biometric-lbl{font-size:12px;color:#555;font-weight:500}
+  .divider{display:flex;align-items:center;gap:10px;width:100%;margin:24px 0 0}
+  .divider-line{flex:1;height:1px;background:#2a2a2a}
+  .divider-txt{font-size:11px;color:#444;white-space:nowrap}
 </style>
 </head>
 <body>
 <div class="pin-box">
   <div class="pin-logo">&#128230;</div>
   <div class="pin-title">Resell Tracker</div>
-  <div class="pin-sub">Enter your 4-digit passcode</div>
-  <div class="pin-dots" id="pin-dots">
-    <div class="pin-dot" id="d0"></div>
-    <div class="pin-dot" id="d1"></div>
-    <div class="pin-dot" id="d2"></div>
-    <div class="pin-dot" id="d3"></div>
+  <div class="pin-sub" id="pin-sub">Enter your 4-digit passcode</div>
+
+  <!-- Biometric button (shown when registered) -->
+  <button class="biometric-btn" id="biometric-btn" style="display:none" onclick="biometricAuth()">
+    <div class="biometric-icon">&#x1F9B9;&#x200D;&#x2642;&#xFE0F;</div>
+    <span class="biometric-lbl" id="biometric-lbl">Use Face ID</span>
+  </button>
+
+  <div class="divider" id="pin-divider" style="display:none">
+    <div class="divider-line"></div>
+    <div class="divider-txt">or enter PIN</div>
+    <div class="divider-line"></div>
   </div>
-  <div class="pin-pad">
-    <button class="pin-key" onclick="pk('1')">1</button>
-    <button class="pin-key" onclick="pk('2')">2</button>
-    <button class="pin-key" onclick="pk('3')">3</button>
-    <button class="pin-key" onclick="pk('4')">4</button>
-    <button class="pin-key" onclick="pk('5')">5</button>
-    <button class="pin-key" onclick="pk('6')">6</button>
-    <button class="pin-key" onclick="pk('7')">7</button>
-    <button class="pin-key" onclick="pk('8')">8</button>
-    <button class="pin-key" onclick="pk('9')">9</button>
-    <button class="pin-key empty"></button>
-    <button class="pin-key" onclick="pk('0')">0</button>
-    <button class="pin-key del" onclick="pdel()">&#9003;</button>
+
+  <div id="pin-section" style="margin-top:24px;display:flex;flex-direction:column;align-items:center;gap:0">
+    <div class="pin-dots" id="pin-dots">
+      <div class="pin-dot" id="d0"></div>
+      <div class="pin-dot" id="d1"></div>
+      <div class="pin-dot" id="d2"></div>
+      <div class="pin-dot" id="d3"></div>
+    </div>
+    <div class="pin-pad">
+      <button class="pin-key" onclick="pk('1')">1</button>
+      <button class="pin-key" onclick="pk('2')">2</button>
+      <button class="pin-key" onclick="pk('3')">3</button>
+      <button class="pin-key" onclick="pk('4')">4</button>
+      <button class="pin-key" onclick="pk('5')">5</button>
+      <button class="pin-key" onclick="pk('6')">6</button>
+      <button class="pin-key" onclick="pk('7')">7</button>
+      <button class="pin-key" onclick="pk('8')">8</button>
+      <button class="pin-key" onclick="pk('9')">9</button>
+      <button class="pin-key empty"></button>
+      <button class="pin-key" onclick="pk('0')">0</button>
+      <button class="pin-key del" onclick="pdel()">&#9003;</button>
+    </div>
   </div>
   <div class="pin-err" id="pin-err"></div>
 </div>
@@ -174,9 +196,182 @@ const PIN_PAGE = `<!DOCTYPE html>
     if(e.key>='0'&&e.key<='9')pk(e.key);
     else if(e.key==='Backspace')pdel();
   });
+
+  // ── Biometric ──
+  async function checkBiometric(){
+    // Only show on devices that support platform authenticator (Face ID / Touch ID)
+    if(!window.PublicKeyCredential) return;
+    try {
+      var avail = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+      if(!avail) return;
+      var r = await fetch('/api/auth/webauthn/status');
+      var d = await r.json();
+      if(d.registered){
+        document.getElementById('biometric-btn').style.display='flex';
+        document.getElementById('pin-divider').style.display='flex';
+        // Detect Face ID vs Touch ID (rough heuristic — iOS 12+ supports Face ID on X/Pro models)
+        var ua = navigator.userAgent;
+        var lbl = 'Use Biometrics';
+        if(/iPhone|iPad/.test(ua)) lbl = 'Use Face ID / Touch ID';
+        else if(/Android/.test(ua)) lbl = 'Use Fingerprint';
+        document.getElementById('biometric-lbl').textContent = lbl;
+        // Auto-trigger biometric on load
+        biometricAuth();
+      }
+    } catch(e){}
+  }
+
+  async function biometricAuth(){
+    var errEl = document.getElementById('pin-err');
+    errEl.textContent = '';
+    try {
+      var cr = await fetch('/api/auth/webauthn/auth-challenge');
+      var opts = await cr.json();
+      if(opts.error) { errEl.textContent = opts.error; return; }
+      // Convert base64url strings to ArrayBuffers
+      opts.challenge = b64ToBuffer(opts.challenge);
+      opts.allowCredentials = (opts.allowCredentials||[]).map(function(c){
+        return { type: c.type, id: b64ToBuffer(c.id) };
+      });
+      var assertion = await navigator.credentials.get({ publicKey: opts });
+      var r = await fetch('/api/auth/webauthn/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: assertion.id,
+          rawId: bufToB64(assertion.rawId),
+          response: {
+            clientDataJSON: bufToB64(assertion.response.clientDataJSON),
+            authenticatorData: bufToB64(assertion.response.authenticatorData),
+            signature: bufToB64(assertion.response.signature),
+            userHandle: assertion.response.userHandle ? bufToB64(assertion.response.userHandle) : null
+          }
+        })
+      });
+      var d = await r.json();
+      if(d.success) { window.location.href = '/app?t=' + d.token; }
+      else { errEl.textContent = 'Biometric failed. Use PIN instead.'; }
+    } catch(e) {
+      // User cancelled or not available — just show PIN silently
+      if(e.name !== 'NotAllowedError') errEl.textContent = 'Biometric error. Use PIN instead.';
+    }
+  }
+
+  function b64ToBuffer(b64){
+    var bin = atob(b64.replace(/-/g,'+').replace(/_/g,'/'));
+    var buf = new Uint8Array(bin.length);
+    for(var i=0;i<bin.length;i++) buf[i]=bin.charCodeAt(i);
+    return buf.buffer;
+  }
+  function bufToB64(buf){
+    var bytes = new Uint8Array(buf);
+    var bin = '';
+    for(var i=0;i<bytes.length;i++) bin += String.fromCharCode(bytes[i]);
+    return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+  }
+
+  checkBiometric();
 </script>
 </body>
 </html>`;
+
+
+// ── WebAuthn / Biometric routes ───────────────────────────────────────────
+const WEBAUTHN_RP_ID = process.env.RP_ID || new URL(process.env.APP_URL || 'http://localhost:3000').hostname;
+const WEBAUTHN_ORIGIN = process.env.APP_URL || 'http://localhost:3000';
+
+// Registration: get challenge
+app.get('/api/auth/webauthn/register-challenge', (req, res) => {
+  const challenge = crypto.randomBytes(32);
+  req.session.webauthnChallenge = challenge.toString('base64url');
+  res.json({
+    challenge: req.session.webauthnChallenge,
+    rp: { name: 'Resell Tracker', id: WEBAUTHN_RP_ID },
+    user: { id: Buffer.from('resell-user').toString('base64url'), name: 'owner', displayName: 'Owner' },
+    pubKeyCredParams: [{ alg: -7, type: 'public-key' }, { alg: -257, type: 'public-key' }],
+    authenticatorSelection: { authenticatorAttachment: 'platform', userVerification: 'required' },
+    timeout: 60000,
+    attestation: 'none'
+  });
+});
+
+// Registration: save credential
+app.post('/api/auth/webauthn/register', async (req, res) => {
+  // Must be PIN-verified to register biometrics
+  if (!(req.session && req.session.pinVerified)) return res.status(401).json({ error: 'PIN required first' });
+  const { id, rawId, response: authResp } = req.body;
+  if (!id || !authResp) return res.status(400).json({ error: 'Missing credential' });
+  try {
+    // Parse clientDataJSON to verify challenge and origin
+    const clientData = JSON.parse(Buffer.from(authResp.clientDataJSON, 'base64url').toString());
+    if (clientData.challenge !== req.session.webauthnChallenge) return res.status(400).json({ error: 'Challenge mismatch' });
+    if (clientData.origin !== WEBAUTHN_ORIGIN) return res.status(400).json({ error: 'Origin mismatch' });
+    // Store credential (public key stored as-is for verification)
+    await pool.query(
+      `INSERT INTO webauthn_credentials (id, credential_id, public_key, sign_count, created_at)
+       VALUES ($1, $2, $3, $4, $5)
+       ON CONFLICT (credential_id) DO UPDATE SET public_key=$3, sign_count=$4`,
+      [crypto.randomUUID(), rawId, authResp.attestationObject, 0, new Date().toISOString()]
+    );
+    delete req.session.webauthnChallenge;
+    res.json({ success: true });
+  } catch(e) { console.error('WebAuthn register error:', e); res.status(500).json({ error: e.message }); }
+});
+
+// Auth: get challenge
+app.get('/api/auth/webauthn/auth-challenge', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT credential_id FROM webauthn_credentials LIMIT 10');
+    if (result.rows.length === 0) return res.status(404).json({ error: 'No credentials registered' });
+    const challenge = crypto.randomBytes(32);
+    req.session.webauthnChallenge = challenge.toString('base64url');
+    res.json({
+      challenge: req.session.webauthnChallenge,
+      rpId: WEBAUTHN_RP_ID,
+      allowCredentials: result.rows.map(r => ({ type: 'public-key', id: r.credential_id })),
+      userVerification: 'required',
+      timeout: 60000
+    });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// Auth: verify and grant session
+app.post('/api/auth/webauthn/auth', async (req, res) => {
+  const { id, rawId, response: authResp } = req.body;
+  if (!id || !authResp) return res.status(400).json({ error: 'Missing credential' });
+  try {
+    // Find credential in DB
+    const result = await pool.query('SELECT * FROM webauthn_credentials WHERE credential_id=$1', [rawId]);
+    if (result.rows.length === 0) return res.status(401).json({ error: 'Unknown credential' });
+    // Verify clientDataJSON
+    const clientData = JSON.parse(Buffer.from(authResp.clientDataJSON, 'base64url').toString());
+    if (clientData.challenge !== req.session.webauthnChallenge) return res.status(401).json({ error: 'Challenge mismatch' });
+    if (clientData.origin !== WEBAUTHN_ORIGIN) return res.status(401).json({ error: 'Origin mismatch' });
+    // Grant session
+    delete req.session.webauthnChallenge;
+    req.session.pinVerified = true;
+    const token = crypto.randomBytes(20).toString('hex');
+    pageTokens.set(token, Date.now());
+    setTimeout(() => pageTokens.delete(token), 60000);
+    res.json({ success: true, token });
+  } catch(e) { console.error('WebAuthn auth error:', e); res.status(500).json({ error: e.message }); }
+});
+
+// Check if biometrics are registered
+app.get('/api/auth/webauthn/status', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT COUNT(*) as cnt FROM webauthn_credentials');
+    res.json({ registered: parseInt(result.rows[0].cnt) > 0 });
+  } catch(e) { res.json({ registered: false }); }
+});
+
+// Remove biometric registration
+app.delete('/api/auth/webauthn/credentials', requirePin, async (req, res) => {
+  try {
+    await pool.query('DELETE FROM webauthn_credentials');
+    res.json({ success: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
 
 // ── PIN routes ────────────────────────────────────────────────────────────
 app.get("/api/auth/pin-status", (req, res) => {
@@ -380,6 +575,13 @@ async function initDB() {
   );`);
   await pool.query(`CREATE TABLE IF NOT EXISTS email_templates (
     id TEXT PRIMARY KEY, name TEXT, html TEXT, created_at TEXT
+  );`);
+  await pool.query(`CREATE TABLE IF NOT EXISTS webauthn_credentials (
+    id TEXT PRIMARY KEY,
+    credential_id TEXT UNIQUE NOT NULL,
+    public_key TEXT NOT NULL,
+    sign_count INTEGER DEFAULT 0,
+    created_at TEXT
   );`);
 }
 

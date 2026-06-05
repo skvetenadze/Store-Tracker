@@ -1203,6 +1203,14 @@ async function sendEmail() {
         </div>
         <button class="btn" style="flex-shrink:0;margin-left:16px;color:var(--red);border-color:var(--red)" onclick="resetSoldDates()">↺ Reset</button>
       </div>
+      <div class="settings-sec-title" style="margin-top:16px"><span>Security</span></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;" id="biometric-setting-row">
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--text)" id="biometric-setting-title">Face ID / Biometrics</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:3px" id="biometric-setting-sub">Loading...</div>
+        </div>
+        <button class="btn btn-primary" style="flex-shrink:0;margin-left:16px" id="biometric-setting-btn" onclick="toggleBiometric()">Set Up</button>
+      </div>
     </div>
     <div style="display:flex;justify-content:flex-end"><button class="btn btn-primary" onclick="closeSettings()">Done</button></div>
   </div>
@@ -1386,28 +1394,23 @@ function buildCharts() {
 function drawChart(id, vals, color, labels, isDollar) {
   var svg=document.getElementById(id); if(!svg) return;
   var W=300,H=90,pL=30,pR=8,pT=10,pB=24,iW=W-pL-pR,iH=H-pT-pB,n=vals.length;
-
   var sorted=vals.slice().filter(function(v){return v>0;}).sort(function(a,b){return b-a;});
   var trueMax=sorted[0]||1, secondMax=sorted[1]||0;
   var scaleMax=(trueMax>secondMax*3&&secondMax>0)?secondMax*1.5:trueMax;
   if(scaleMax===0) scaleMax=1;
-
   var baseY=pT+iH;
   function py(v){return baseY-(Math.min(v,scaleMax)/scaleMax)*iH;}
-
   var html='', gid='g'+id;
   html+='<defs>';
   html+='<linearGradient id="'+gid+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="'+color+'" stop-opacity="0.85"/><stop offset="100%" stop-color="'+color+'" stop-opacity="0.3"/></linearGradient>';
   html+='<pattern id="hatch'+id+'" patternUnits="userSpaceOnUse" width="5" height="5" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5" stroke="'+color+'" stroke-width="2" opacity="0.5"/></pattern>';
   html+='</defs>';
-
   [0,scaleMax*0.5,scaleMax].forEach(function(tv){
     var ty=py(tv);
     var lbl=isDollar?(tv>=1000?'$'+(tv/1000).toFixed(1)+'k':'$'+tv.toFixed(0)):tv.toFixed(0);
     html+='<text x="'+(pL-3)+'" y="'+(ty+4)+'" text-anchor="end" fill="currentColor" font-size="8" opacity="0.45">'+lbl+'</text>';
     html+='<line x1="'+pL+'" y1="'+ty+'" x2="'+(W-pR)+'" y2="'+ty+'" stroke="currentColor" stroke-width="0.5" opacity="0.1"/>';
   });
-
   var gap=2, barW=(iW/n)-gap;
   for(var i=0;i<n;i++){
     var bx=pL+(i/n)*iW+(gap/2);
@@ -1417,17 +1420,14 @@ function drawChart(id, vals, color, labels, isDollar) {
     html+='<rect class="chart-bar" x="'+bx.toFixed(1)+'" y="'+topY.toFixed(1)+'" width="'+barW.toFixed(1)+'" height="'+bh.toFixed(1)+'" rx="2" fill="url(#'+gid+')" opacity="'+(vals[i]>0?'1':'0.18')+'" data-label="'+labels[i]+'" data-val="'+vals[i]+'" data-dollar="'+isDollar+'"/>';
     if(isClipped){
       html+='<rect x="'+bx.toFixed(1)+'" y="'+pT+'" width="'+barW.toFixed(1)+'" height="8" rx="2" fill="url(#hatch'+id+')" pointer-events="none"/>';
-      html+='<text x="'+(bx+barW/2).toFixed(1)+'" y="'+(pT-2)+'" text-anchor="middle" fill="'+color+'" font-size="8" opacity="0.9">▲</text>';
+      html+='<text x="'+(bx+barW/2).toFixed(1)+'" y="'+(pT-2)+'" text-anchor="middle" fill="'+color+'" font-size="8" opacity="0.9">&#9650;</text>';
     }
   }
-
   [0,Math.floor(n/3),Math.floor(2*n/3),n-1].forEach(function(si){
     var lx=pL+(si/n)*iW+(gap/2)+barW/2;
     html+='<text x="'+lx.toFixed(1)+'" y="'+(H-5)+'" text-anchor="middle" fill="currentColor" font-size="8" opacity="0.4">'+labels[si]+'</text>';
   });
-
   svg.innerHTML=html;
-
   var bars=svg.querySelectorAll('.chart-bar');
   var tip=document.getElementById('chart-tooltip');
   if(tip) bars.forEach(function(bar){
@@ -1450,12 +1450,9 @@ var currentPeriodDays = 7;
 
 function setPeriod(days) {
   currentPeriodDays = days;
-  // Update pill active state
   var btns = document.querySelectorAll('#period-toggle .pill-opt');
   btns.forEach(function(b){ b.classList.remove('active'); });
-  var idx = days===7?0:days===14?1:2;
-  btns[idx].classList.add('active');
-  // Update title
+  btns[days===7?0:days===14?1:2].classList.add('active');
   var titles = {7:'Last 7 Days', 14:'Last 2 Weeks', 30:'Last Month'};
   document.getElementById('week-title').textContent = titles[days];
   renderWeekly();
@@ -2024,6 +2021,89 @@ async function init(){
   await loadApp();
 }
 init();
+loadBiometricSetting();
+
+// ── Biometric settings ──
+async function loadBiometricSetting() {
+  var btn = document.getElementById('biometric-setting-btn');
+  var sub = document.getElementById('biometric-setting-sub');
+  if (!window.PublicKeyCredential) {
+    sub.textContent = 'Not supported on this device/browser';
+    btn.style.display = 'none'; return;
+  }
+  try {
+    var avail = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+    if (!avail) { sub.textContent = 'No biometric hardware detected'; btn.style.display='none'; return; }
+    var r = await fetch('/api/auth/webauthn/status');
+    var d = await r.json();
+    if (d.registered) {
+      sub.textContent = 'Biometric login is active';
+      btn.textContent = 'Remove';
+      btn.classList.remove('btn-primary');
+      btn.style.color = 'var(--red)';
+      btn.style.borderColor = 'var(--red)';
+    } else {
+      sub.textContent = 'Use Face ID or Touch ID to unlock';
+      btn.textContent = 'Set Up';
+      btn.classList.add('btn-primary');
+      btn.style.color = '';
+      btn.style.borderColor = '';
+    }
+  } catch(e) { sub.textContent = 'Unable to check status'; btn.style.display='none'; }
+}
+
+async function toggleBiometric() {
+  var sub = document.getElementById('biometric-setting-sub');
+  var btn = document.getElementById('biometric-setting-btn');
+  var r = await fetch('/api/auth/webauthn/status');
+  var d = await r.json();
+  if (d.registered) {
+    if (!confirm('Remove biometric login? You will need your PIN to sign in.')) return;
+    await fetch('/api/auth/webauthn/credentials', { method: 'DELETE' });
+    loadBiometricSetting();
+  } else {
+    // Register
+    sub.textContent = 'Follow the prompt on your device...';
+    try {
+      var cr = await fetch('/api/auth/webauthn/register-challenge');
+      var opts = await cr.json();
+      opts.challenge = b64ToBuffer(opts.challenge);
+      opts.user.id = b64ToBuffer(opts.user.id);
+      var cred = await navigator.credentials.create({ publicKey: opts });
+      var reg = await fetch('/api/auth/webauthn/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: cred.id,
+          rawId: bufToB64(cred.rawId),
+          response: {
+            clientDataJSON: bufToB64(cred.response.clientDataJSON),
+            attestationObject: bufToB64(cred.response.attestationObject)
+          }
+        })
+      });
+      var rd = await reg.json();
+      if (rd.success) { loadBiometricSetting(); }
+      else { sub.textContent = 'Registration failed: ' + (rd.error||'Unknown error'); }
+    } catch(e) {
+      sub.textContent = e.name === 'NotAllowedError' ? 'Cancelled.' : 'Error: ' + e.message;
+      setTimeout(loadBiometricSetting, 2000);
+    }
+  }
+}
+
+function b64ToBuffer(b64){
+  var bin=atob(b64.replace(/-/g,'+').replace(/_/g,'/'));
+  var buf=new Uint8Array(bin.length);
+  for(var i=0;i<bin.length;i++) buf[i]=bin.charCodeAt(i);
+  return buf.buffer;
+}
+function bufToB64(buf){
+  var bytes=new Uint8Array(buf), bin='';
+  for(var i=0;i<bytes.length;i++) bin+=String.fromCharCode(bytes[i]);
+  return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+}
+
 </script>
 <!-- FAB (mobile add button) -->
 <button class="fab" onclick="openAddModal()" title="Add Product">+</button>
@@ -2105,6 +2185,6 @@ init();
 </div>
 
 
-<div id="chart-tooltip"><span class="ct-date"></span><span class="ct-val"></span></div>
+<div id="chart-tooltip"></div>
 </body>
 </html>
