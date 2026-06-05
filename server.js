@@ -277,8 +277,14 @@ const PIN_PAGE = `<!DOCTYPE html>
 
 
 // ── WebAuthn / Biometric routes ───────────────────────────────────────────
-const WEBAUTHN_RP_ID = process.env.RP_ID || new URL(process.env.APP_URL || 'http://localhost:3000').hostname;
-const WEBAUTHN_ORIGIN = process.env.APP_URL || 'http://localhost:3000';
+// Derived per-request from Host header — no env var needed
+function getWebAuthnConfig(req) {
+  const host = req.headers['x-forwarded-host'] || req.headers.host || 'localhost:3000';
+  const proto = req.headers['x-forwarded-proto'] || (req.secure ? 'https' : 'http');
+  const rpId = host.split(':')[0]; // strip port if present
+  const origin = proto + '://' + host;
+  return { rpId, origin };
+}
 
 // Registration: get challenge
 app.get('/api/auth/webauthn/register-challenge', (req, res) => {
@@ -286,7 +292,7 @@ app.get('/api/auth/webauthn/register-challenge', (req, res) => {
   req.session.webauthnChallenge = challenge.toString('base64url');
   res.json({
     challenge: req.session.webauthnChallenge,
-    rp: { name: 'Resell Tracker', id: WEBAUTHN_RP_ID },
+    rp: { name: 'Resell Tracker', id: getWebAuthnConfig(req).rpId },
     user: { id: Buffer.from('resell-user').toString('base64url'), name: 'owner', displayName: 'Owner' },
     pubKeyCredParams: [{ alg: -7, type: 'public-key' }, { alg: -257, type: 'public-key' }],
     authenticatorSelection: { authenticatorAttachment: 'platform', userVerification: 'required' },
@@ -305,7 +311,7 @@ app.post('/api/auth/webauthn/register', async (req, res) => {
     // Parse clientDataJSON to verify challenge and origin
     const clientData = JSON.parse(Buffer.from(authResp.clientDataJSON, 'base64url').toString());
     if (clientData.challenge !== req.session.webauthnChallenge) return res.status(400).json({ error: 'Challenge mismatch' });
-    if (clientData.origin !== WEBAUTHN_ORIGIN) return res.status(400).json({ error: 'Origin mismatch' });
+    if (clientData.origin !== getWebAuthnConfig(req).origin) return res.status(400).json({ error: 'Origin mismatch' });
     // Store credential (public key stored as-is for verification)
     await pool.query(
       `INSERT INTO webauthn_credentials (id, credential_id, public_key, sign_count, created_at)
@@ -327,7 +333,7 @@ app.get('/api/auth/webauthn/auth-challenge', async (req, res) => {
     req.session.webauthnChallenge = challenge.toString('base64url');
     res.json({
       challenge: req.session.webauthnChallenge,
-      rpId: WEBAUTHN_RP_ID,
+      rpId: getWebAuthnConfig(req).rpId,
       allowCredentials: result.rows.map(r => ({ type: 'public-key', id: r.credential_id })),
       userVerification: 'required',
       timeout: 60000
@@ -346,7 +352,7 @@ app.post('/api/auth/webauthn/auth', async (req, res) => {
     // Verify clientDataJSON
     const clientData = JSON.parse(Buffer.from(authResp.clientDataJSON, 'base64url').toString());
     if (clientData.challenge !== req.session.webauthnChallenge) return res.status(401).json({ error: 'Challenge mismatch' });
-    if (clientData.origin !== WEBAUTHN_ORIGIN) return res.status(401).json({ error: 'Origin mismatch' });
+    if (clientData.origin !== getWebAuthnConfig(req).origin) return res.status(401).json({ error: 'Origin mismatch' });
     // Grant session
     delete req.session.webauthnChallenge;
     req.session.pinVerified = true;
