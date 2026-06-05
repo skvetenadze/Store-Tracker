@@ -244,9 +244,9 @@ input[type="color"]::-webkit-color-swatch { border-radius:4px; border:none; }
   .item-count { width:100%; text-align:right; font-size:11px; }
 
   /* Dashboard */
-  .cards-grid { grid-template-columns:1fr 1fr; gap:10px; }
+  .cards-grid { grid-template-columns:1fr; gap:12px; }
   .card-value { font-size:22px; }
-  .card-chart { height:70px; }
+  .card-chart { height:140px; }
   .dash-area { padding:14px 14px 80px; }
   .recent-box { overflow-x:auto; }
   .recent-box table { min-width:480px; }
@@ -290,7 +290,7 @@ input[type="color"]::-webkit-color-swatch { border-radius:4px; border:none; }
   /* Single column cards on small phones */
   .cards-grid { grid-template-columns:1fr; }
   .card-value { font-size:26px; }
-  .card-chart { height:60px; }
+  .card-chart { height:140px; }
 }
 
 /* ════ SUPPLIERS ════ */
@@ -518,7 +518,6 @@ tbody tr.selected { background:rgba(34,197,94,0.07) !important; }
 }
 
 
-/* Chart hover tooltip */
 #chart-tooltip {
   position:fixed; pointer-events:none; z-index:9999;
   background:var(--bg2); border:1px solid var(--border2);
@@ -1379,16 +1378,17 @@ function buildCharts() {
 
 function drawChart(id, vals, color, labels, isDollar) {
   var svg=document.getElementById(id); if(!svg) return;
-  var W=300,H=90,pL=30,pR=8,pT=8,pB=22,iW=W-pL-pR,iH=H-pT-pB,n=vals.length;
+  // Use actual rendered size for responsive sizing
+  var rect=svg.getBoundingClientRect();
+  var W=rect.width||300, H=rect.height||90;
+  var pL=34,pR=8,pT=10,pB=24,iW=W-pL-pR,iH=H-pT-pB,n=vals.length;
 
-  // Smart y-axis: if one bar is >3x the second highest, scale to second highest*1.5 and clip the outlier
+  // Smart y-axis: if one bar >3x second highest, scale to second*1.5 and clip outlier
   var sorted=vals.slice().filter(function(v){return v>0;}).sort(function(a,b){return b-a;});
-  var trueMax=sorted[0]||1;
-  var secondMax=sorted[1]||0;
+  var trueMax=sorted[0]||1, secondMax=sorted[1]||0;
   var scaleMax=(trueMax>secondMax*3&&secondMax>0)?secondMax*1.5:trueMax;
   if(scaleMax===0) scaleMax=1;
 
-  // Bottom of chart in SVG coords
   var baseY=pT+iH;
   function py(v){return baseY-(Math.min(v,scaleMax)/scaleMax)*iH;}
 
@@ -1399,61 +1399,49 @@ function drawChart(id, vals, color, labels, isDollar) {
   html+='<pattern id="hatch'+id+'" patternUnits="userSpaceOnUse" width="5" height="5" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5" stroke="'+color+'" stroke-width="2" opacity="0.5"/></pattern>';
   html+='</defs>';
 
-  // Grid lines + y labels
   [0,scaleMax*0.5,scaleMax].forEach(function(tv){
     var ty=py(tv);
     var lbl=isDollar?(tv>=1000?'$'+(tv/1000).toFixed(1)+'k':'$'+tv.toFixed(0)):tv.toFixed(0);
-    html+='<text x="'+(pL-3)+'" y="'+(ty+4)+'" text-anchor="end" fill="currentColor" font-size="8" opacity="0.45">'+lbl+'</text>';
+    html+='<text x="'+(pL-3)+'" y="'+(ty+4)+'" text-anchor="end" fill="currentColor" font-size="9" opacity="0.45">'+lbl+'</text>';
     html+='<line x1="'+pL+'" y1="'+ty+'" x2="'+(W-pR)+'" y2="'+ty+'" stroke="currentColor" stroke-width="0.5" opacity="0.1"/>';
   });
 
-  var gap=2, barW=(iW/n)-gap;
+  var gap=3, barW=(iW/n)-gap;
   for(var i=0;i<n;i++){
     var bx=pL+(i/n)*iW+(gap/2);
     var isClipped=vals[i]>scaleMax;
-    // Bar always starts from baseY and goes up — no floating
-    var topY=isClipped ? pT : py(vals[i]);
-    var bh=baseY-topY;
-    if(bh<0) bh=0;
+    var topY=isClipped?pT:py(vals[i]);
+    var bh=baseY-topY; if(bh<0) bh=0;
     var op=vals[i]>0?'1':'0.18';
-    // Main bar rect — full height from bottom
     html+='<rect class="chart-bar" x="'+bx.toFixed(1)+'" y="'+topY.toFixed(1)+'" width="'+barW.toFixed(1)+'" height="'+bh.toFixed(1)+'" rx="2" fill="url(#'+gid+')" opacity="'+op+'" data-label="'+labels[i]+'" data-val="'+vals[i]+'" data-dollar="'+isDollar+'"/>';
     if(isClipped){
-      // Hatch overlay on the top 8px only to show it's clipped
       html+='<rect x="'+bx.toFixed(1)+'" y="'+pT+'" width="'+barW.toFixed(1)+'" height="8" rx="2" fill="url(#hatch'+id+')" pointer-events="none"/>';
-      // Arrow above
-      var cx=bx+barW/2;
-      html+='<text x="'+cx.toFixed(1)+'" y="'+(pT-2)+'" text-anchor="middle" fill="'+color+'" font-size="8" opacity="0.9">▲</text>';
+      html+='<text x="'+(bx+barW/2).toFixed(1)+'" y="'+(pT-2).toFixed(1)+'" text-anchor="middle" fill="'+color+'" font-size="8" opacity="0.9">▲</text>';
     }
   }
 
-  // X-axis date labels
   [0,Math.floor(n/3),Math.floor(2*n/3),n-1].forEach(function(si){
     var lx=pL+(si/n)*iW+(gap/2)+barW/2;
-    html+='<text x="'+lx.toFixed(1)+'" y="'+(H-5)+'" text-anchor="middle" fill="currentColor" font-size="8" opacity="0.4">'+labels[si]+'</text>';
+    html+='<text x="'+lx.toFixed(1)+'" y="'+(H-5)+'" text-anchor="middle" fill="currentColor" font-size="9" opacity="0.4">'+labels[si]+'</text>';
   });
 
   svg.innerHTML=html;
 
-  // Tooltip listeners
   var bars=svg.querySelectorAll('.chart-bar');
   var tip=document.getElementById('chart-tooltip');
-  bars.forEach(function(bar){
+  if(tip) bars.forEach(function(bar){
     bar.addEventListener('mouseenter',function(){
       var v=parseFloat(bar.getAttribute('data-val'));
       var lbl=bar.getAttribute('data-label');
       var isDol=bar.getAttribute('data-dollar')==='true';
-      var display=isDol?('$'+v.toFixed(2)):v.toFixed(0);
-      tip.innerHTML='<span class="ct-date">'+lbl+'</span><span class="ct-val">'+display+'</span>';
+      tip.innerHTML='<span class="ct-date">'+lbl+'</span><span class="ct-val">'+(isDol?'$'+v.toFixed(2):v.toFixed(0))+'</span>';
       tip.classList.add('visible');
     });
     bar.addEventListener('mousemove',function(e){
       tip.style.left=(e.clientX+14)+'px';
       tip.style.top=(e.clientY-38)+'px';
     });
-    bar.addEventListener('mouseleave',function(){
-      tip.classList.remove('visible');
-    });
+    bar.addEventListener('mouseleave',function(){ tip.classList.remove('visible'); });
   });
 }
 
