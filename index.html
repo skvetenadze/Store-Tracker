@@ -246,7 +246,7 @@ input[type="color"]::-webkit-color-swatch { border-radius:4px; border:none; }
   /* Dashboard */
   .cards-grid { grid-template-columns:1fr 1fr; gap:10px; }
   .card-value { font-size:22px; }
-  .card-chart { height:100px; }
+  .card-chart { height:70px; }
   .dash-area { padding:14px 14px 80px; }
   .recent-box { overflow-x:auto; }
   .recent-box table { min-width:480px; }
@@ -290,7 +290,7 @@ input[type="color"]::-webkit-color-swatch { border-radius:4px; border:none; }
   /* Single column cards on small phones */
   .cards-grid { grid-template-columns:1fr; }
   .card-value { font-size:26px; }
-  .card-chart { height:120px; }
+  .card-chart { height:60px; }
 }
 
 /* ════ SUPPLIERS ════ */
@@ -958,8 +958,15 @@ async function sendEmail() {
     <div class="week-sec">
       <div class="week-box">
         <div class="week-box-header">
-          <div class="week-title">Last 7 Days</div>
-          <div class="week-badge" id="week-range"></div>
+          <div class="week-title" id="week-title">Last 7 Days</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="pill-toggle" id="period-toggle">
+              <button class="pill-opt active" onclick="setPeriod(7)">7D</button>
+              <button class="pill-opt" onclick="setPeriod(14)">2W</button>
+              <button class="pill-opt" onclick="setPeriod(30)">1M</button>
+            </div>
+            <div class="week-badge" id="week-range"></div>
+          </div>
         </div>
         <div class="week-stats">
           <div class="week-stat">
@@ -1439,22 +1446,35 @@ function drawChart(id, vals, color, labels, isDollar) {
   });
 }
 
+var currentPeriodDays = 7;
+
+function setPeriod(days) {
+  currentPeriodDays = days;
+  // Update pill active state
+  var btns = document.querySelectorAll('#period-toggle .pill-opt');
+  btns.forEach(function(b){ b.classList.remove('active'); });
+  var idx = days===7?0:days===14?1:2;
+  btns[idx].classList.add('active');
+  // Update title
+  var titles = {7:'Last 7 Days', 14:'Last 2 Weeks', 30:'Last Month'};
+  document.getElementById('week-title').textContent = titles[days];
+  renderWeekly();
+}
+
 function renderWeekly() {
-  var now = Date.now(), SEVEN = 7*24*3600*1000, cutoff = now - SEVEN;
-  var sold7 = items.filter(function(i){
+  var now = Date.now(), cutoff = now - currentPeriodDays*24*3600*1000;
+  var soldIn = items.filter(function(i){
     if((i.status !== 'SOLD' && i.status !== 'Shipped to Buyer') || !hasSold(i)) return false;
     var t = i.sold_at ? new Date(i.sold_at).getTime() : 0;
     return t >= cutoff;
   });
-  var qty = sold7.length;
+  var qty = soldIn.length;
   var totalCost = 0, totalRev = 0;
-  sold7.forEach(function(i){ totalCost += parseFloat(i.cost)||0; totalRev += parseFloat(i.sold)||0; });
+  soldIn.forEach(function(i){ totalCost += parseFloat(i.cost)||0; totalRev += parseFloat(i.sold)||0; });
   var profit = totalRev - totalCost;
   var margin = totalRev > 0 ? (profit/totalRev*100).toFixed(1) : '0.0';
-  // date range label
-  var d0 = new Date(cutoff), d1 = new Date(now);
   var fmt = function(d){ return (d.getMonth()+1)+'/'+d.getDate(); };
-  document.getElementById('week-range').textContent = fmt(d0) + ' – ' + fmt(d1);
+  document.getElementById('week-range').textContent = fmt(new Date(cutoff)) + ' – ' + fmt(new Date(now));
   document.getElementById('week-profit').textContent = '$'+profit.toFixed(2);
   document.getElementById('week-profit-sub').textContent = 'from '+qty+' sale'+(qty===1?'':'s');
   document.getElementById('week-qty').textContent = qty;
