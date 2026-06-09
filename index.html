@@ -531,6 +531,32 @@ tbody tr.selected { background:rgba(34,197,94,0.07) !important; }
 .ct-date { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.6px; color:var(--text3); }
 .ct-val  { font-size:15px; font-weight:800; letter-spacing:-.4px; color:var(--text); }
 .card-chart { cursor:crosshair; }
+
+/* ── Monthly P&L Card ── */
+.pnl-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:4px; margin-top:8px; width:100%; }
+.pnl-cell { display:flex; flex-direction:column; align-items:center; gap:3px; cursor:default; }
+.pnl-bar-wrap { width:100%; height:52px; display:flex; align-items:flex-end; justify-content:center; }
+.pnl-bar { width:60%; border-radius:3px 3px 0 0; min-height:2px; transition:opacity .15s; }
+.pnl-bar.positive { background:var(--green); }
+.pnl-bar.negative { background:var(--red); }
+.pnl-bar.zero     { background:var(--border2); height:2px !important; }
+.pnl-mo { font-size:9px; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:.4px; }
+.pnl-cell:hover .pnl-bar { opacity:.65; }
+#pnl-tooltip {
+  position:fixed; pointer-events:none; z-index:9999;
+  background:var(--bg2); border:1px solid var(--border2);
+  border-radius:8px; padding:8px 12px;
+  display:flex; flex-direction:column; gap:2px;
+  opacity:0; transform:translateY(4px);
+  transition:opacity .12s, transform .12s;
+  box-shadow:0 4px 16px rgba(0,0,0,.35);
+}
+#pnl-tooltip.visible { opacity:1; transform:translateY(0); }
+.pnl-tt-month  { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.6px; color:var(--text3); }
+.pnl-tt-profit { font-size:15px; font-weight:800; letter-spacing:-.4px; }
+.pnl-tt-profit.pos { color:var(--green); }
+.pnl-tt-profit.neg { color:var(--red); }
+.pnl-tt-sub    { font-size:11px; color:var(--text3); }
 </style>
 
 <script>
@@ -943,10 +969,10 @@ async function sendEmail() {
         <svg class="card-chart" id="chart-sold" viewBox="0 0 300 90" preserveAspectRatio="xMidYMid meet"></svg>
       </div>
       <div class="stat-card">
-        <div class="card-header"><span class="card-title">Inventory Value</span><button class="card-link" onclick="switchTab('inventory')">View all →</button></div>
+        <div class="card-header"><span class="card-title">Monthly P&amp;L</span><span id="pnl-year-label" style="font-size:12px;color:var(--text3);font-weight:600"></span></div>
         <div class="card-value col-green" id="card-inv">$0.00</div>
-        <div class="card-chart-lbl">Items at Home</div>
-        <svg class="card-chart" id="chart-inv" viewBox="0 0 300 90" preserveAspectRatio="xMidYMid meet"></svg>
+        <div class="card-chart-lbl">YTD Profit by Month</div>
+        <div class="pnl-grid" id="pnl-grid"></div>
       </div>
       <div class="stat-card">
         <div class="card-header"><span class="card-title">Items Sold</span><button class="card-link" onclick="switchTab('inventory')">View all →</button></div>
@@ -1260,6 +1286,7 @@ function resetSoldDates() {
   markDirty();
   flushToServer();
   renderWeekly();
+  renderPnl();
   renderRecent();
   alert('Done! The Last 7 Days will now count from items you mark as sold going forward.');
 }
@@ -1283,7 +1310,7 @@ function switchTab(tab) {
     var el=document.getElementById('bnav-'+t); if(el) el.classList.toggle('active',t===tab);
   });
   if (tab==='inventory') { document.getElementById('status-filter').value=''; activeChip=null; setChipActive(null); renderTable(); }
-  if (tab==='dashboard') { buildCharts(); renderWeekly(); renderRecent(); }
+  if (tab==='dashboard') { buildCharts(); renderWeekly(); renderPnl(); renderRecent(); }
   if (tab==='suppliers') { renderSuppliers(); }
   if (tab==='emails') { loadEmailTemplates(); parseTemplate(); }
 }
@@ -1388,7 +1415,7 @@ function buildCharts() {
   var labels=buckets.map(function(b,idx){var d=new Date(idx===N-1?b.end:b.start);return(d.getMonth()+1)+'/'+d.getDate();});
   drawChart('chart-profit',buckets.map(function(b){return b.profit;}),'#22c55e',labels,true);
   drawChart('chart-sold',  buckets.map(function(b){return b.sold;  }),'#f87171',labels,true);
-  drawChart('chart-inv',   buckets.map(function(b){return b.inv;   }),'#22c55e',labels,true);
+  //drawChart('chart-inv',   buckets.map(function(b){return b.inv;   }),'#22c55e',labels,true);
   drawChart('chart-count', buckets.map(function(b){return b.cnt;   }),'#fbbf24',labels,false);
 }
 
@@ -1655,6 +1682,7 @@ async function saveItem(){
   if(currentTab === 'dashboard'){
     buildCharts();
     renderWeekly();
+    renderPnl();
     renderRecent();
   }
 }
@@ -1662,7 +1690,7 @@ async function deleteItem(id){
   if(!confirm('Delete this item? This cannot be undone.'))return;
   items=items.filter(function(x){return x.id!==id;});
   markDirty(); updateStats(); renderTable();
-  if(currentTab==='dashboard'){buildCharts();renderWeekly();renderRecent();}
+  if(currentTab==='dashboard'){buildCharts();renderWeekly();renderPnl();renderRecent();}
 }
 function openLink(url){ window.api.openLink(url); }
 
@@ -1676,7 +1704,7 @@ async function importCSV(){
   var added=0;
   function parseRow(row){var cols=[],cur='',inQ=false;for(var i=0;i<row.length;i++){var ch=row[i];if(ch==='"'){if(inQ&&row[i+1]==='"'){cur+='"';i++;}else inQ=!inQ;}else if(ch===','&&!inQ){cols.push(cur);cur='';}else cur+=ch;}cols.push(cur);return cols;}
   for(var i=1;i<lines.length;i++){if(!lines[i].trim())continue;var cols=parseRow(lines[i]);var name=cm.name>=0?(cols[cm.name]||'').trim():'';if(!name)continue;items.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2)+i,name:name,cost:cm.cost>=0?(cols[cm.cost]||'').replace(/[^0-9.]/g,''):'',sold:cm.sold>=0?(cols[cm.sold]||'').replace(/[^0-9.]/g,''):'',status:normS(cm.status>=0?cols[cm.status]:''),tracking:cm.tracking>=0?(cols[cm.tracking]||'').trim():'',notes:cm.notes>=0?(cols[cm.notes]||'').trim():'',updatedAt:new Date().toISOString()});added++;}
-  if(added>0){markDirty();await flushToServer();updateStats();renderTable();if(currentTab==='dashboard'){buildCharts();renderWeekly();renderRecent();}alert('Imported '+added+' products.');}else{alert('No valid rows found.');}
+  if(added>0){markDirty();await flushToServer();updateStats();renderTable();if(currentTab==='dashboard'){buildCharts();renderWeekly();renderPnl();renderRecent();}alert('Imported '+added+' products.');}else{alert('No valid rows found.');}
 }
 async function exportCSV(){
   var rows=[['Product','Cost','Sold','Status','Tracking','Notes','Profit']];
@@ -1881,7 +1909,7 @@ function applyBulk() {
   markDirty();
   updateStats();
   renderTable();
-  if (currentTab === 'dashboard') { buildCharts(); renderWeekly(); renderRecent(); }
+  if (currentTab === 'dashboard') { buildCharts(); renderWeekly(); renderPnl(); renderRecent(); }
 }
 
 function deleteBulk() {
@@ -1895,7 +1923,7 @@ function deleteBulk() {
   markDirty();
   updateStats();
   renderTable();
-  if (currentTab === 'dashboard') { buildCharts(); renderWeekly(); renderRecent(); }
+  if (currentTab === 'dashboard') { buildCharts(); renderWeekly(); renderPnl(); renderRecent(); }
 }
 
 
@@ -2023,6 +2051,7 @@ async function loadApp(){
   renderTable();
   buildCharts();
   renderWeekly();
+  renderPnl();
   renderRecent();
 }
 
@@ -2114,6 +2143,60 @@ function bufToB64(buf){
   return btoa(bin).replace(/[+]/g,'-').replace(/[/]/g,'_').replace(/=/g,'');
 }
 
+function renderPnl() {
+  var now=new Date(), yr=now.getFullYear(), curMo=now.getMonth();
+  var MO=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var months=MO.map(function(){return{profit:0,revenue:0,count:0};});
+  items.forEach(function(item){
+    if(!hasSold(item)) return;
+    var raw=item.sold_at||item.updatedAt||item.updated_at; if(!raw) return;
+    var d=new Date(raw); if(isNaN(d)||d.getFullYear()!==yr) return;
+    var m=d.getMonth(), cost=parseFloat(item.cost)||0, sold=parseFloat(item.sold)||0;
+    months[m].profit+=(sold-cost); months[m].revenue+=sold; months[m].count++;
+  });
+  var ytd=0; months.forEach(function(m){ytd+=m.profit;});
+  var cardEl=document.getElementById('card-inv');
+  if(cardEl){
+    cardEl.textContent=(ytd>=0?'+':'')+'$'+Math.abs(ytd).toFixed(2);
+    cardEl.className='card-value '+(ytd>=0?'col-green':'col-red');
+  }
+  var lbl=document.getElementById('pnl-year-label'); if(lbl) lbl.textContent=yr;
+  var grid=document.getElementById('pnl-grid'); if(!grid) return;
+  var maxAbs=0; months.forEach(function(m){if(Math.abs(m.profit)>maxAbs)maxAbs=Math.abs(m.profit);});
+  if(maxAbs===0) maxAbs=1;
+  var html='';
+  months.forEach(function(mo,idx){
+    var pct=Math.abs(mo.profit)/maxAbs;
+    var barH=mo.count>0?Math.max(Math.round(pct*52),4):0;
+    var cls=mo.profit>0?'positive':mo.profit<0?'negative':'zero';
+    var fade=idx>curMo?';opacity:.22':'';
+    html+='<div class="pnl-cell" data-mo="'+idx+'">'
+      +'<div class="pnl-bar-wrap"><div class="pnl-bar '+cls+'" style="height:'+barH+'px'+fade+'"></div></div>'
+      +'<div class="pnl-mo">'+MO[idx]+'</div>'
+      +'</div>';
+  });
+  grid.innerHTML=html;
+  var tip=document.getElementById('pnl-tooltip');
+  grid.querySelectorAll('.pnl-cell').forEach(function(cell){
+    var idx=parseInt(cell.getAttribute('data-mo')), mo=months[idx];
+    cell.addEventListener('mouseenter',function(){
+      if(!tip) return;
+      tip.querySelector('.pnl-tt-month').textContent=MO[idx]+' '+yr;
+      var pe=tip.querySelector('.pnl-tt-profit');
+      pe.textContent=(mo.profit>=0?'+':'-')+'$'+Math.abs(mo.profit).toFixed(2);
+      pe.className='pnl-tt-profit '+(mo.profit>=0?'pos':'neg');
+      tip.querySelector('.pnl-tt-sub').textContent=mo.count+' sale'+(mo.count!==1?'s':'')+' · rev $'+mo.revenue.toFixed(0);
+      tip.classList.add('visible');
+    });
+    cell.addEventListener('mousemove',function(e){
+      if(!tip) return;
+      tip.style.left=(e.clientX+14)+'px';
+      tip.style.top=(e.clientY-65)+'px';
+    });
+    cell.addEventListener('mouseleave',function(){ if(tip) tip.classList.remove('visible'); });
+  });
+}
+
 </script>
 <!-- FAB (mobile add button) -->
 <button class="fab" onclick="openAddModal()" title="Add Product">+</button>
@@ -2195,6 +2278,7 @@ function bufToB64(buf){
 </div>
 
 
+<div id="pnl-tooltip"><span class="pnl-tt-month"></span><span class="pnl-tt-profit"></span><span class="pnl-tt-sub"></span></div>
 <div id="chart-tooltip"></div>
 </body>
 </html>
