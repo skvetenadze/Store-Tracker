@@ -2,7 +2,7 @@
 <html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Resell Tracker</title>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -129,6 +129,9 @@ tbody tr { border-bottom:1px solid var(--border); transition:background .1s; }
 tbody tr:hover { background:var(--bg2); }
 tbody td { padding:10px 12px; color:var(--text); vertical-align:middle; }
 td.name { font-weight:500; max-width:320px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+@media (max-width:768px) {
+  input, select, textarea { font-size:16px !important; }
+}
 td.money { font-variant-numeric:tabular-nums; }
 td.notes { max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text2); font-size:12px; }
 td.actions { white-space:nowrap; }
