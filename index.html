@@ -134,6 +134,7 @@ td.name { font-weight:500; max-width:320px; overflow:hidden; text-overflow:ellip
 }
 td.money { font-variant-numeric:tabular-nums; }
 td.notes { max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text2); font-size:12px; }
+td.date-col { font-size:12px; color:var(--text2); font-variant-numeric:tabular-nums; white-space:nowrap; }
 td.actions { white-space:nowrap; }
 
 /* Badges */
@@ -210,6 +211,7 @@ input[type="color"]::-webkit-color-swatch { border-radius:4px; border:none; }
 .mob-card-profit-pos { font-size:13px; font-weight:700; color:var(--green); }
 .mob-card-profit-neg { font-size:13px; font-weight:700; color:var(--red); }
 .mob-card-tracking { font-size:11px; color:var(--blue); font-family:monospace; }
+.mob-card-date { font-size:11px; color:var(--text3); margin-left:auto; font-variant-numeric:tabular-nums; }
 .mob-card-notes { font-size:12px; color:var(--text3); margin-top:4px; line-height:1.4; }
 .mob-empty { text-align:center; padding:60px 20px; color:var(--text3); }
 .mob-empty-icon { font-size:36px; margin-bottom:10px; }
@@ -1044,6 +1046,11 @@ async function sendEmail() {
       <option>Pending</option><option>Shipped by Supplier</option><option>Delivered at Home</option>
       <option>Shipped to Buyer</option><option>SOLD</option><option>DISPUTE</option><option>DAMAGED</option>
     </select>
+    <select id="sort-filter" onchange="renderTable()">
+      <option value="">Sort: Default</option>
+      <option value="date-desc">Date Added: Newest First</option>
+      <option value="date-asc">Date Added: Oldest First</option>
+    </select>
     <span class="item-count" id="count-label"></span>
   </div>
   <div class="table-area">
@@ -1052,6 +1059,7 @@ async function sendEmail() {
         <th class="col-check"><input type="checkbox" class="row-check" id="check-all" onclick="toggleSelectAll(this)"></th>
         <th style="width:220px">Product</th><th style="width:90px">Cost $</th><th style="width:90px">Sold $</th>
         <th style="width:165px">Status</th><th style="width:155px">Tracking</th><th>Notes</th>
+        <th style="width:95px">Date</th>
         <th style="width:90px">Profit</th><th style="width:70px"></th>
       </tr></thead>
       <tbody id="tbody"></tbody>
@@ -1536,7 +1544,15 @@ function renderRecent() {
 
 function renderTable() {
   var q=(document.getElementById('search').value||'').toLowerCase(), sf=document.getElementById('status-filter').value;
+  var sortVal=(document.getElementById('sort-filter')||{}).value||'';
   var filtered=items.filter(function(i){ var nOk=(i.name||'').toLowerCase().indexOf(q)>=0; var sOk=activeChip==='shipped'?(i.status==='Shipped by Supplier'||i.status==='Shipped to Buyer'):(!sf||i.status===sf); return nOk&&sOk; });
+  if(sortVal){
+    filtered.sort(function(a,b){
+      var ta=new Date(a.addedAt||a.updatedAt||a.updatedat||0).getTime();
+      var tb=new Date(b.addedAt||b.updatedAt||b.updatedat||0).getTime();
+      return sortVal==='date-desc'?(tb-ta):(ta-tb);
+    });
+  }
   document.getElementById('count-label').textContent=filtered.length===items.length?items.length+' items':filtered.length+' of '+items.length+' items';
   var tbody=document.getElementById('tbody'), empty=document.getElementById('empty-state');
   if(filtered.length===0){ tbody.innerHTML=''; empty.style.display=''; empty.querySelector('p').textContent=items.length===0?'No products yet':'No products match your search'; empty.querySelector('small').textContent=items.length===0?'Click "+ Add Product" to log your first item':'Try clearing your search or filter'; return; }
@@ -1555,6 +1571,7 @@ function renderTable() {
       +'<td>'+badge(i.status)+'</td>'
       +'<td>'+th+'</td>'
       +'<td class="notes" title="'+esc(i.notes||'')+'">'+(esc(i.notes||'')||'—')+'</td>'
+      +'<td class="date-col">'+fmtShortDateTime(i.addedAt||i.updatedAt||i.updatedat)+'</td>'
       +'<td>'+ph+'</td>'
       +'<td class="actions"><button class="act-btn" onclick="editItem(\''+i.id+'\')" title="Edit">✏</button><button class="act-btn del" onclick="deleteItem(\''+i.id+'\')" title="Delete">✕</button></td>'
       +'</tr>';
@@ -1564,6 +1581,17 @@ function renderTable() {
 }
 
 function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function fmtShortDateTime(iso){
+  if(!iso) return '—';
+  var d=new Date(iso);
+  if(isNaN(d.getTime())) return '—';
+  var h=d.getHours(), m=d.getMinutes();
+  var ampm=h>=12?'pm':'am';
+  h=h%12; if(h===0)h=12;
+  var mm=m<10?('0'+m):m;
+  return (d.getMonth()+1)+'/'+d.getDate()+' '+h+':'+mm+ampm;
+}
 
 // ── Mobile card renderer ───────────────────────────────────────────────────
 function renderMobileCards(filtered) {
@@ -1601,6 +1629,7 @@ function renderMobileCards(filtered) {
       +'<div class="mob-card-row">'
       +  '<span class="badge '+(bdgMap[i.status]||'badge-pending')+'">'+i.status+'</span>'
       +  profitHtml
+      +  '<span class="mob-card-date">'+fmtShortDateTime(i.addedAt||i.updatedAt||i.updatedat)+'</span>'
       +'</div>'
       +'<div class="mob-card-row">'
       +  (c>0?'<span class="mob-card-money">Cost <strong>$'+c.toFixed(2)+'</strong></span>':'')
@@ -1657,7 +1686,11 @@ async function saveItem(){
       ? (oldItem && (oldItem.status === 'SOLD' || oldItem.status === 'Shipped to Buyer')
           ? (oldItem.sold_at || null)  // keep null for legacy items
           : new Date().toISOString())
-      : null
+      : null,
+    // addedAt: stamped once when the item is first created, never changes after that
+    addedAt: (editId && oldItem)
+      ? (oldItem.addedAt || oldItem.updatedAt || oldItem.updatedat || new Date().toISOString())
+      : new Date().toISOString()
   };
 
   if(editId){
@@ -1706,7 +1739,7 @@ async function importCSV(){
   function normS(raw){var s=(raw||'').trim().replace(/[^\w\s]/g,'').trim().toLowerCase(); if(s==='sold')return 'SOLD'; if(s.indexOf('dispute')>=0)return 'DISPUTE'; if(s.indexOf('damage')>=0)return 'DAMAGED'; if(s.indexOf('supplier')>=0)return 'Shipped by Supplier'; if(s.indexOf('delivered')>=0||s.indexOf('at home')>=0)return 'Delivered at Home'; if(s.indexOf('buyer')>=0)return 'Shipped to Buyer'; return 'Pending';}
   var added=0;
   function parseRow(row){var cols=[],cur='',inQ=false;for(var i=0;i<row.length;i++){var ch=row[i];if(ch==='"'){if(inQ&&row[i+1]==='"'){cur+='"';i++;}else inQ=!inQ;}else if(ch===','&&!inQ){cols.push(cur);cur='';}else cur+=ch;}cols.push(cur);return cols;}
-  for(var i=1;i<lines.length;i++){if(!lines[i].trim())continue;var cols=parseRow(lines[i]);var name=cm.name>=0?(cols[cm.name]||'').trim():'';if(!name)continue;items.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2)+i,name:name,cost:cm.cost>=0?(cols[cm.cost]||'').replace(/[^0-9.]/g,''):'',sold:cm.sold>=0?(cols[cm.sold]||'').replace(/[^0-9.]/g,''):'',status:normS(cm.status>=0?cols[cm.status]:''),tracking:cm.tracking>=0?(cols[cm.tracking]||'').trim():'',notes:cm.notes>=0?(cols[cm.notes]||'').trim():'',updatedAt:new Date().toISOString()});added++;}
+  for(var i=1;i<lines.length;i++){if(!lines[i].trim())continue;var cols=parseRow(lines[i]);var name=cm.name>=0?(cols[cm.name]||'').trim():'';if(!name)continue;var nowIso=new Date().toISOString();items.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2)+i,name:name,cost:cm.cost>=0?(cols[cm.cost]||'').replace(/[^0-9.]/g,''):'',sold:cm.sold>=0?(cols[cm.sold]||'').replace(/[^0-9.]/g,''):'',status:normS(cm.status>=0?cols[cm.status]:''),tracking:cm.tracking>=0?(cols[cm.tracking]||'').trim():'',notes:cm.notes>=0?(cols[cm.notes]||'').trim():'',updatedAt:nowIso,addedAt:nowIso});added++;}
   if(added>0){markDirty();await flushToServer();updateStats();renderTable();if(currentTab==='dashboard'){buildCharts();renderWeekly();renderPnl();renderRecent();}alert('Imported '+added+' products.');}else{alert('No valid rows found.');}
 }
 async function exportCSV(){
