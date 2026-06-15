@@ -1048,8 +1048,8 @@ async function sendEmail() {
     </select>
     <select id="sort-filter" onchange="renderTable()">
       <option value="">Sort: Default</option>
-      <option value="date-desc">Date Added: Newest First</option>
-      <option value="date-asc">Date Added: Oldest First</option>
+      <option value="date-desc">Date Modified: Newest First</option>
+      <option value="date-asc">Date Modified: Oldest First</option>
     </select>
     <span class="item-count" id="count-label"></span>
   </div>
@@ -1059,7 +1059,7 @@ async function sendEmail() {
         <th class="col-check"><input type="checkbox" class="row-check" id="check-all" onclick="toggleSelectAll(this)"></th>
         <th style="width:220px">Product</th><th style="width:90px">Cost $</th><th style="width:90px">Sold $</th>
         <th style="width:165px">Status</th><th style="width:155px">Tracking</th><th>Notes</th>
-        <th style="width:95px">Date</th>
+        <th style="width:95px">Modified</th>
         <th style="width:90px">Profit</th><th style="width:70px"></th>
       </tr></thead>
       <tbody id="tbody"></tbody>
@@ -1687,10 +1687,8 @@ async function saveItem(){
           ? (oldItem.sold_at || null)  // keep null for legacy items
           : new Date().toISOString())
       : null,
-    // addedAt: stamped once when the item is first created, never changes after that
-    addedAt: (editId && oldItem)
-      ? (oldItem.addedAt || oldItem.updatedAt || oldItem.updatedat || new Date().toISOString())
-      : new Date().toISOString()
+    // addedAt: timestamp of the most recent save (add or edit) — shown as "Modified" date
+    addedAt: new Date().toISOString()
   };
 
   if(editId){
@@ -1933,6 +1931,7 @@ function applyBulk() {
     if (newSold     !== '') item.sold     = newSold;
     if (newTracking !== '') item.tracking = newTracking;
     item.updatedAt = now;
+    item.addedAt = now;
   });
 
   // Reset inputs
