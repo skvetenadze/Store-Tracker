@@ -438,6 +438,8 @@ app.post("/api/items", requirePin, async (req, res) => {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
+    // Prevent two /api/items saves from running at the same time
+    await client.query("SELECT pg_advisory_xact_lock(987654321)");
     await client.query("DELETE FROM items");
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
