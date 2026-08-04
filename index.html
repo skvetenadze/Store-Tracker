@@ -113,6 +113,29 @@ body { font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif; backg
 .week-stat-val { font-size:30px; font-weight:800; letter-spacing:-1px; line-height:1.1; }
 .week-stat-sub { font-size:11px; color:var(--text3); margin-top:2px; }
 
+/* Insights */
+.insights-sec { margin-top:24px; }
+.insights-title { font-size:16px; font-weight:700; color:var(--text); margin-bottom:12px; }
+.insights-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
+.insight-card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius-lg); padding:18px 20px; display:flex; flex-direction:column; transition:border-color .15s,box-shadow .15s; min-height:118px; }
+.insight-card:hover { border-color:var(--border2); box-shadow:0 4px 20px rgba(0,0,0,.18); }
+[data-theme="light"] .insight-card:hover { box-shadow:0 4px 14px rgba(0,0,0,.08); }
+.insight-lbl { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:var(--text3); margin-bottom:8px; }
+.insight-val { font-size:22px; font-weight:800; letter-spacing:-.5px; line-height:1.2; }
+.insight-sub { font-size:11px; color:var(--text3); margin-top:4px; }
+.insight-delta { display:inline-flex; align-items:center; gap:3px; font-size:12px; font-weight:700; margin-top:6px; }
+.insight-delta.up { color:var(--green); }
+.insight-delta.down { color:var(--red); }
+.insight-delta.flat { color:var(--text3); }
+.insight-empty { font-size:12px; color:var(--text3); }
+.insight-list { list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:6px; }
+.insight-list li { display:flex; align-items:center; justify-content:space-between; font-size:12px; color:var(--text); gap:8px; }
+.insight-list .il-name { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.insight-list .il-count { color:var(--text3); font-weight:600; flex-shrink:0; }
+@media (max-width:900px) {
+  .insights-grid { grid-template-columns:repeat(2,1fr); }
+}
+
 /* Inventory */
 .toolbar { display:flex; align-items:center; gap:10px; padding:10px 20px; border-bottom:1px solid var(--border); background:var(--bg); flex-shrink:0; }
 .toolbar input,.toolbar select { background:var(--bg3); border:1px solid var(--border); border-radius:var(--radius); color:var(--text); font-size:13px; padding:6px 12px; height:32px; outline:none; transition:border-color .15s; font-family:inherit; }
@@ -1034,6 +1057,32 @@ async function sendEmail() {
         </table>
       </div>
     </div>
+    <div class="insights-sec">
+      <div class="insights-title">Insights</div>
+      <div class="insights-grid">
+        <div class="insight-card">
+          <div class="insight-lbl">Top Sellers (30d)</div>
+          <div id="insight-top-sellers"><div class="insight-empty">No sales yet</div></div>
+        </div>
+        <div class="insight-card">
+          <div class="insight-lbl">Today vs Yesterday</div>
+          <div class="insight-val col-text" id="insight-day-val">$0.00</div>
+          <div class="insight-sub" id="insight-day-sub">no sales today</div>
+          <div class="insight-delta flat" id="insight-day-delta">—</div>
+        </div>
+        <div class="insight-card">
+          <div class="insight-lbl">This Week vs Last Week</div>
+          <div class="insight-val col-text" id="insight-week-val">$0.00</div>
+          <div class="insight-sub" id="insight-week-sub">no sales this week</div>
+          <div class="insight-delta flat" id="insight-week-delta">—</div>
+        </div>
+        <div class="insight-card">
+          <div class="insight-lbl">Most Profitable Item</div>
+          <div class="insight-val col-green" id="insight-top-item-val">—</div>
+          <div class="insight-sub" id="insight-top-item-sub">no sales yet</div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1298,7 +1347,7 @@ function resetSoldDates() {
   flushToServer();
   renderWeekly();
   renderPnl();
-  renderRecent();
+  renderRecent(); renderInsights();
   alert('Done! The Last 7 Days will now count from items you mark as sold going forward.');
 }
 
@@ -1321,7 +1370,7 @@ function switchTab(tab) {
     var el=document.getElementById('bnav-'+t); if(el) el.classList.toggle('active',t===tab);
   });
   if (tab==='inventory') { document.getElementById('status-filter').value=''; activeChip=null; setChipActive(null); renderTable(); }
-  if (tab==='dashboard') { buildCharts(); renderWeekly(); renderPnl(); renderRecent(); }
+  if (tab==='dashboard') { buildCharts(); renderWeekly(); renderPnl(); renderRecent(); renderInsights(); }
   if (tab==='suppliers') { renderSuppliers(); }
   if (tab==='emails') { loadEmailTemplates(); parseTemplate(); }
 }
@@ -1542,6 +1591,92 @@ function renderRecent() {
   tb.innerHTML=sold.map(function(i){ var c=parseFloat(i.cost)||0,s=parseFloat(i.sold)||0,p=s-c; return '<tr><td class="name" title="'+esc(i.name)+'">'+esc(i.name)+'</td><td class="money">'+(c>0?'$'+c.toFixed(2):'—')+'</td><td class="money">$'+s.toFixed(2)+'</td><td><span class="'+(p>=0?'profit-pos':'profit-neg')+'">$'+p.toFixed(2)+'</span></td><td class="notes">'+(esc(i.notes||'')||'—')+'</td></tr>'; }).join('');
 }
 
+function setDelta(elId, curr, prev) {
+  var el = document.getElementById(elId);
+  if (!el) return;
+  el.className = 'insight-delta';
+  if (prev === 0 && curr === 0) { el.classList.add('flat'); el.textContent = '— no change'; return; }
+  if (prev === 0) { el.classList.add('up'); el.textContent = '▲ new activity'; return; }
+  var pct = ((curr - prev) / Math.abs(prev)) * 100;
+  if (Math.abs(pct) < 0.05) { el.classList.add('flat'); el.textContent = '— flat'; return; }
+  var dir = pct >= 0 ? 'up' : 'down';
+  var arrow = pct >= 0 ? '▲' : '▼';
+  el.classList.add(dir);
+  el.textContent = arrow+' '+Math.abs(pct).toFixed(1)+'% vs prior';
+}
+
+function renderInsights() {
+  var sold = items.filter(function(i){ return (i.status==='SOLD' || i.status==='Shipped to Buyer') && hasSold(i) && i.sold_at; });
+
+  // --- Top sellers (last 30 days), grouped by product name ---
+  var THIRTY = 30*24*3600*1000;
+  var cutoff30 = Date.now() - THIRTY;
+  var counts = {};
+  sold.forEach(function(i){
+    var t = new Date(i.sold_at).getTime();
+    if (t < cutoff30) return;
+    var name = i.name || 'Unnamed';
+    counts[name] = (counts[name]||0) + 1;
+  });
+  var topSellers = Object.keys(counts).map(function(name){ return {name:name, count:counts[name]}; })
+    .sort(function(a,b){ return b.count - a.count; }).slice(0,4);
+  var tsEl = document.getElementById('insight-top-sellers');
+  if (topSellers.length === 0) {
+    tsEl.innerHTML = '<div class="insight-empty">No sales yet</div>';
+  } else {
+    tsEl.innerHTML = '<ul class="insight-list">' + topSellers.map(function(t){
+      return '<li><span class="il-name" title="'+esc(t.name)+'">'+esc(t.name)+'</span><span class="il-count">×'+t.count+'</span></li>';
+    }).join('') + '</ul>';
+  }
+
+  // --- Today vs Yesterday ---
+  var now = new Date();
+  var todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  var yestStart = todayStart - 24*3600*1000;
+  var todayProfit = 0, todayQty = 0, yestProfit = 0;
+  sold.forEach(function(i){
+    var t = new Date(i.sold_at).getTime();
+    var p = (parseFloat(i.sold)||0) - (parseFloat(i.cost)||0);
+    if (t >= todayStart) { todayProfit += p; todayQty++; }
+    else if (t >= yestStart && t < todayStart) { yestProfit += p; }
+  });
+  document.getElementById('insight-day-val').textContent = '$'+todayProfit.toFixed(2);
+  document.getElementById('insight-day-sub').textContent = todayQty === 0 ? 'no sales today' : (todayQty+' sale'+(todayQty===1?'':'s')+' today');
+  setDelta('insight-day-delta', todayProfit, yestProfit);
+
+  // --- This Week vs Last Week (rolling 7-day windows) ---
+  var WEEK = 7*24*3600*1000;
+  var weekStart = Date.now() - WEEK;
+  var lastWeekStart = weekStart - WEEK;
+  var weekProfit = 0, weekQty = 0, lastWeekProfit = 0;
+  sold.forEach(function(i){
+    var t = new Date(i.sold_at).getTime();
+    var p = (parseFloat(i.sold)||0) - (parseFloat(i.cost)||0);
+    if (t >= weekStart) { weekProfit += p; weekQty++; }
+    else if (t >= lastWeekStart && t < weekStart) { lastWeekProfit += p; }
+  });
+  document.getElementById('insight-week-val').textContent = '$'+weekProfit.toFixed(2);
+  document.getElementById('insight-week-sub').textContent = weekQty === 0 ? 'no sales this week' : (weekQty+' sale'+(weekQty===1?'':'s')+' this week');
+  setDelta('insight-week-delta', weekProfit, lastWeekProfit);
+
+  // --- Most profitable item (single highest-profit sale) ---
+  var best = null;
+  sold.forEach(function(i){
+    var p = (parseFloat(i.sold)||0) - (parseFloat(i.cost)||0);
+    if (!best || p > best.profit) best = {name:i.name||'Unnamed', profit:p};
+  });
+  var tiEl = document.getElementById('insight-top-item-val');
+  var tsub = document.getElementById('insight-top-item-sub');
+  if (!best) {
+    tiEl.textContent = '—';
+    tsub.textContent = 'no sales yet';
+  } else {
+    tiEl.textContent = '$'+best.profit.toFixed(2);
+    tsub.textContent = best.name;
+    tsub.title = best.name;
+  }
+}
+
 function renderTable() {
   var q=(document.getElementById('search').value||'').toLowerCase(), sf=document.getElementById('status-filter').value;
   var sortVal=(document.getElementById('sort-filter')||{}).value||'';
@@ -1717,14 +1852,14 @@ async function saveItem(){
     buildCharts();
     renderWeekly();
     renderPnl();
-    renderRecent();
+    renderRecent(); renderInsights();
   }
 }
 async function deleteItem(id){
   if(!confirm('Delete this item? This cannot be undone.'))return;
   items=items.filter(function(x){return x.id!==id;});
   markDirty(); updateStats(); renderTable();
-  if(currentTab==='dashboard'){buildCharts();renderWeekly();renderPnl();renderRecent();}
+  if(currentTab==='dashboard'){buildCharts();renderWeekly();renderPnl();renderRecent(); renderInsights();}
 }
 function openLink(url){ window.api.openLink(url); }
 
@@ -1738,7 +1873,7 @@ async function importCSV(){
   var added=0;
   function parseRow(row){var cols=[],cur='',inQ=false;for(var i=0;i<row.length;i++){var ch=row[i];if(ch==='"'){if(inQ&&row[i+1]==='"'){cur+='"';i++;}else inQ=!inQ;}else if(ch===','&&!inQ){cols.push(cur);cur='';}else cur+=ch;}cols.push(cur);return cols;}
   for(var i=1;i<lines.length;i++){if(!lines[i].trim())continue;var cols=parseRow(lines[i]);var name=cm.name>=0?(cols[cm.name]||'').trim():'';if(!name)continue;var nowIso=new Date().toISOString();items.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2)+i,name:name,cost:cm.cost>=0?(cols[cm.cost]||'').replace(/[^0-9.]/g,''):'',sold:cm.sold>=0?(cols[cm.sold]||'').replace(/[^0-9.]/g,''):'',status:normS(cm.status>=0?cols[cm.status]:''),tracking:cm.tracking>=0?(cols[cm.tracking]||'').trim():'',notes:cm.notes>=0?(cols[cm.notes]||'').trim():'',updatedAt:nowIso,addedAt:nowIso});added++;}
-  if(added>0){markDirty();await flushToServer();updateStats();renderTable();if(currentTab==='dashboard'){buildCharts();renderWeekly();renderPnl();renderRecent();}alert('Imported '+added+' products.');}else{alert('No valid rows found.');}
+  if(added>0){markDirty();await flushToServer();updateStats();renderTable();if(currentTab==='dashboard'){buildCharts();renderWeekly();renderPnl();renderRecent(); renderInsights();}alert('Imported '+added+' products.');}else{alert('No valid rows found.');}
 }
 async function exportCSV(){
   var rows=[['Product','Cost','Sold','Status','Tracking','Notes','Profit']];
@@ -1944,7 +2079,7 @@ function applyBulk() {
   markDirty();
   updateStats();
   renderTable();
-  if (currentTab === 'dashboard') { buildCharts(); renderWeekly(); renderPnl(); renderRecent(); }
+  if (currentTab === 'dashboard') { buildCharts(); renderWeekly(); renderPnl(); renderRecent(); renderInsights(); }
 }
 
 function deleteBulk() {
@@ -1958,7 +2093,7 @@ function deleteBulk() {
   markDirty();
   updateStats();
   renderTable();
-  if (currentTab === 'dashboard') { buildCharts(); renderWeekly(); renderPnl(); renderRecent(); }
+  if (currentTab === 'dashboard') { buildCharts(); renderWeekly(); renderPnl(); renderRecent(); renderInsights(); }
 }
 
 
@@ -2087,7 +2222,7 @@ async function loadApp(){
   buildCharts();
   renderWeekly();
   renderPnl();
-  renderRecent();
+  renderRecent(); renderInsights();
 }
 
 async function init(){
