@@ -130,10 +130,12 @@ body { font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif; backg
 .insight-delta .id-amt { font-weight:700; }
 .insight-delta .id-pct { font-weight:600; opacity:.75; margin-left:2px; }
 .insight-empty { font-size:12px; color:var(--text3); }
-.insight-list { list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:6px; }
-.insight-list li { display:flex; align-items:center; justify-content:space-between; font-size:12px; color:var(--text); gap:8px; }
+.insight-list { list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:8px; }
+.insight-list li { display:flex; flex-direction:column; gap:1px; font-size:12px; color:var(--text); }
+.insight-list .il-main { display:flex; align-items:center; justify-content:space-between; gap:8px; }
 .insight-list .il-name { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .insight-list .il-count { color:var(--text3); font-weight:600; flex-shrink:0; }
+.insight-list .il-sub { font-size:10px; color:var(--text3); font-weight:500; }
 @media (max-width:900px) {
   .insights-grid { grid-template-columns:repeat(2,1fr); }
 }
@@ -1629,7 +1631,7 @@ function renderInsights() {
     tsEl.innerHTML = '<div class="insight-empty">No sales yet</div>';
   } else {
     tsEl.innerHTML = '<ul class="insight-list">' + topSellers.map(function(t){
-      return '<li><span class="il-name" title="'+esc(t.name)+'">'+esc(t.name)+'</span><span class="il-count">×'+t.count+'</span></li>';
+      return '<li><div class="il-main"><span class="il-name" title="'+esc(t.name)+'">'+esc(t.name)+'</span><span class="il-count">×'+t.count+'</span></div></li>';
     }).join('') + '</ul>';
   }
 
@@ -1669,15 +1671,15 @@ function renderInsights() {
   var topItems = sold.filter(function(i){
     return new Date(i.sold_at).getTime() >= cutoff90;
   }).map(function(i){
-    var p = (parseFloat(i.sold)||0) - (parseFloat(i.cost)||0);
-    return {name:i.name||'Unnamed', profit:p};
+    var c = parseFloat(i.cost)||0, s = parseFloat(i.sold)||0;
+    return {name:i.name||'Unnamed', profit:s-c, cost:c, saleP:s};
   }).sort(function(a,b){ return b.profit - a.profit; }).slice(0,4);
   var tiEl = document.getElementById('insight-top-items');
   if (topItems.length === 0) {
     tiEl.innerHTML = '<div class="insight-empty">No sales yet</div>';
   } else {
     tiEl.innerHTML = '<ul class="insight-list">' + topItems.map(function(t){
-      return '<li><span class="il-name" title="'+esc(t.name)+'">'+esc(t.name)+'</span><span class="il-count profit-pos">$'+t.profit.toFixed(2)+'</span></li>';
+      return '<li><div class="il-main"><span class="il-name" title="'+esc(t.name)+'">'+esc(t.name)+'</span><span class="il-count profit-pos">$'+t.profit.toFixed(2)+'</span></div><div class="il-sub">cost $'+t.cost.toFixed(2)+' &rarr; sold $'+t.saleP.toFixed(2)+'</div></li>';
     }).join('') + '</ul>';
   }
 }
