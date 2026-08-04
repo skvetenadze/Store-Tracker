@@ -1079,7 +1079,7 @@ async function sendEmail() {
           <div class="insight-delta flat" id="insight-week-delta">—</div>
         </div>
         <div class="insight-card">
-          <div class="insight-lbl">Most Profitable Items (All-Time)</div>
+          <div class="insight-lbl">Most Profitable Items (90d)</div>
           <div id="insight-top-items"><div class="insight-empty">No sales yet</div></div>
         </div>
       </div>
@@ -1663,18 +1663,15 @@ function renderInsights() {
   document.getElementById('insight-week-sub').textContent = weekQty === 0 ? 'no sales this week' : (weekQty+' sale'+(weekQty===1?'':'s')+' this week');
   setDelta('insight-week-delta', weekProfit, lastWeekProfit);
 
-  // --- Most profitable items, all-time, aggregated by product name ---
-  var profitByName = {};
-  sold.forEach(function(i){
-    var name = i.name || 'Unnamed';
+  // --- Most profitable individual sales, last 90 days (single items, not summed) ---
+  var NINETY = 90*24*3600*1000;
+  var cutoff90 = Date.now() - NINETY;
+  var topItems = sold.filter(function(i){
+    return new Date(i.sold_at).getTime() >= cutoff90;
+  }).map(function(i){
     var p = (parseFloat(i.sold)||0) - (parseFloat(i.cost)||0);
-    if (!profitByName[name]) profitByName[name] = {profit:0, count:0};
-    profitByName[name].profit += p;
-    profitByName[name].count += 1;
-  });
-  var topItems = Object.keys(profitByName).map(function(name){
-    return {name:name, profit:profitByName[name].profit, count:profitByName[name].count};
-  }).sort(function(a,b){ return b.profit - a.profit; }).slice(0,5);
+    return {name:i.name||'Unnamed', profit:p};
+  }).sort(function(a,b){ return b.profit - a.profit; }).slice(0,4);
   var tiEl = document.getElementById('insight-top-items');
   if (topItems.length === 0) {
     tiEl.innerHTML = '<div class="insight-empty">No sales yet</div>';
