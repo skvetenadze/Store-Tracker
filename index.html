@@ -127,6 +127,8 @@ body { font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif; backg
 .insight-delta.up { color:var(--green); }
 .insight-delta.down { color:var(--red); }
 .insight-delta.flat { color:var(--text3); }
+.insight-delta .id-amt { font-weight:700; }
+.insight-delta .id-pct { font-weight:600; opacity:.75; margin-left:2px; }
 .insight-empty { font-size:12px; color:var(--text3); }
 .insight-list { list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:6px; }
 .insight-list li { display:flex; align-items:center; justify-content:space-between; font-size:12px; color:var(--text); gap:8px; }
@@ -1077,9 +1079,8 @@ async function sendEmail() {
           <div class="insight-delta flat" id="insight-week-delta">—</div>
         </div>
         <div class="insight-card">
-          <div class="insight-lbl">Most Profitable Item</div>
-          <div class="insight-val col-green" id="insight-top-item-val">—</div>
-          <div class="insight-sub" id="insight-top-item-sub">no sales yet</div>
+          <div class="insight-lbl">Most Profitable Items (All-Time)</div>
+          <div id="insight-top-items"><div class="insight-empty">No sales yet</div></div>
         </div>
       </div>
     </div>
@@ -1595,14 +1596,17 @@ function setDelta(elId, curr, prev) {
   var el = document.getElementById(elId);
   if (!el) return;
   el.className = 'insight-delta';
+  var diff = curr - prev;
+  var sign = diff > 0 ? '+' : (diff < 0 ? '−' : '');
+  var amtStr = sign + '$' + Math.abs(diff).toFixed(2);
   if (prev === 0 && curr === 0) { el.classList.add('flat'); el.textContent = '— no change'; return; }
-  if (prev === 0) { el.classList.add('up'); el.textContent = '▲ new activity'; return; }
-  var pct = ((curr - prev) / Math.abs(prev)) * 100;
-  if (Math.abs(pct) < 0.05) { el.classList.add('flat'); el.textContent = '— flat'; return; }
+  if (prev === 0) { el.classList.add('up'); el.innerHTML = '▲ <span class="id-amt">'+amtStr+'</span> <span class="id-pct">(new activity)</span>'; return; }
+  var pct = (diff / Math.abs(prev)) * 100;
+  if (Math.abs(pct) < 0.05) { el.classList.add('flat'); el.textContent = '— flat ($0.00)'; return; }
   var dir = pct >= 0 ? 'up' : 'down';
   var arrow = pct >= 0 ? '▲' : '▼';
   el.classList.add(dir);
-  el.textContent = arrow+' '+Math.abs(pct).toFixed(1)+'% vs prior';
+  el.innerHTML = arrow+' <span class="id-amt">'+amtStr+'</span> <span class="id-pct">('+Math.abs(pct).toFixed(1)+'%)</span>';
 }
 
 function renderInsights() {
@@ -1659,21 +1663,25 @@ function renderInsights() {
   document.getElementById('insight-week-sub').textContent = weekQty === 0 ? 'no sales this week' : (weekQty+' sale'+(weekQty===1?'':'s')+' this week');
   setDelta('insight-week-delta', weekProfit, lastWeekProfit);
 
-  // --- Most profitable item (single highest-profit sale) ---
-  var best = null;
+  // --- Most profitable items, all-time, aggregated by product name ---
+  var profitByName = {};
   sold.forEach(function(i){
+    var name = i.name || 'Unnamed';
     var p = (parseFloat(i.sold)||0) - (parseFloat(i.cost)||0);
-    if (!best || p > best.profit) best = {name:i.name||'Unnamed', profit:p};
+    if (!profitByName[name]) profitByName[name] = {profit:0, count:0};
+    profitByName[name].profit += p;
+    profitByName[name].count += 1;
   });
-  var tiEl = document.getElementById('insight-top-item-val');
-  var tsub = document.getElementById('insight-top-item-sub');
-  if (!best) {
-    tiEl.textContent = '—';
-    tsub.textContent = 'no sales yet';
+  var topItems = Object.keys(profitByName).map(function(name){
+    return {name:name, profit:profitByName[name].profit, count:profitByName[name].count};
+  }).sort(function(a,b){ return b.profit - a.profit; }).slice(0,5);
+  var tiEl = document.getElementById('insight-top-items');
+  if (topItems.length === 0) {
+    tiEl.innerHTML = '<div class="insight-empty">No sales yet</div>';
   } else {
-    tiEl.textContent = '$'+best.profit.toFixed(2);
-    tsub.textContent = best.name;
-    tsub.title = best.name;
+    tiEl.innerHTML = '<ul class="insight-list">' + topItems.map(function(t){
+      return '<li><span class="il-name" title="'+esc(t.name)+'">'+esc(t.name)+'</span><span class="il-count profit-pos">$'+t.profit.toFixed(2)+'</span></li>';
+    }).join('') + '</ul>';
   }
 }
 
