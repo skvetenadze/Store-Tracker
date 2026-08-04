@@ -130,12 +130,16 @@ body { font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif; backg
 .insight-delta .id-amt { font-weight:700; }
 .insight-delta .id-pct { font-weight:600; opacity:.75; margin-left:2px; }
 .insight-empty { font-size:12px; color:var(--text3); }
-.insight-list { list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:8px; }
-.insight-list li { display:flex; flex-direction:column; gap:1px; font-size:12px; color:var(--text); }
-.insight-list .il-main { display:flex; align-items:center; justify-content:space-between; gap:8px; }
-.insight-list .il-name { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.insight-list { list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:6px; }
+.insight-list li { display:flex; align-items:center; font-size:12px; color:var(--text); }
+.insight-list .il-main { display:flex; align-items:center; justify-content:space-between; gap:8px; width:100%; }
+.insight-list .il-left { display:flex; align-items:baseline; gap:6px; overflow:hidden; min-width:0; }
+.insight-list .il-name { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0; }
+.insight-list .il-cs { flex-shrink:0; font-size:10px; font-weight:700; white-space:nowrap; }
+.insight-list .il-cs .il-cost { color:var(--red); }
+.insight-list .il-cs .il-sold { color:var(--green); }
+.insight-list .il-cs .il-arrow { color:var(--text3); font-weight:500; margin:0 1px; }
 .insight-list .il-count { color:var(--text3); font-weight:600; flex-shrink:0; }
-.insight-list .il-sub { font-size:10px; color:var(--text3); font-weight:500; }
 @media (max-width:900px) {
   .insights-grid { grid-template-columns:repeat(2,1fr); }
 }
@@ -1679,7 +1683,7 @@ function renderInsights() {
     tiEl.innerHTML = '<div class="insight-empty">No sales yet</div>';
   } else {
     tiEl.innerHTML = '<ul class="insight-list">' + topItems.map(function(t){
-      return '<li><div class="il-main"><span class="il-name" title="'+esc(t.name)+'">'+esc(t.name)+'</span><span class="il-count profit-pos">$'+t.profit.toFixed(2)+'</span></div><div class="il-sub">cost $'+t.cost.toFixed(2)+' &rarr; sold $'+t.saleP.toFixed(2)+'</div></li>';
+      return '<li><div class="il-main"><div class="il-left"><span class="il-name" title="'+esc(t.name)+'">'+esc(t.name)+'</span><span class="il-cs"><span class="il-cost">$'+t.cost.toFixed(2)+'</span><span class="il-arrow">&rarr;</span><span class="il-sold">$'+t.saleP.toFixed(2)+'</span></span></div><span class="il-count profit-pos">$'+t.profit.toFixed(2)+'</span></div></li>';
     }).join('') + '</ul>';
   }
 }
