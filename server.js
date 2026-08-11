@@ -418,7 +418,8 @@ app.get("/api/items", requirePin, async (req, res) => {
   try {
     const result = await pool.query(`
       SELECT id, name, cost, sold, status, tracking, notes, row_order,
-             updatedat AS "updatedAt", sold_at AS "sold_at", added_at AS "addedAt"
+             updatedat AS "updatedAt", sold_at AS "sold_at", added_at AS "addedAt",
+             return_by AS "returnBy"
       FROM items ORDER BY row_order ASC NULLS LAST, updatedat DESC
     `);
     res.json(result.rows);
@@ -444,12 +445,12 @@ app.post("/api/items", requirePin, async (req, res) => {
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
       await client.query(
-        `INSERT INTO items (id, name, cost, sold, status, tracking, notes, updatedAt, sold_at, added_at, row_order)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
+        `INSERT INTO items (id, name, cost, sold, status, tracking, notes, updatedAt, sold_at, added_at, row_order, return_by)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
         [item.id, item.name || "", num(item.cost), num(item.sold),
          item.status || "Pending", item.tracking || "", item.notes || "",
          item.updatedAt || new Date().toISOString(), item.sold_at || null,
-         item.addedAt || item.added_at || null, i]
+         item.addedAt || item.added_at || null, i, item.returnBy || item.return_by || null]
       );
     }
     await client.query("COMMIT");
@@ -579,6 +580,7 @@ async function initDB() {
   await pool.query(`ALTER TABLE items ADD COLUMN IF NOT EXISTS row_order INTEGER;`);
   await pool.query(`ALTER TABLE items ADD COLUMN IF NOT EXISTS sold_at TEXT;`);
   await pool.query(`ALTER TABLE items ADD COLUMN IF NOT EXISTS added_at TEXT;`);
+  await pool.query(`ALTER TABLE items ADD COLUMN IF NOT EXISTS return_by TEXT;`);
   await pool.query(`CREATE TABLE IF NOT EXISTS suppliers (
     id TEXT PRIMARY KEY, name TEXT, contact TEXT, platform TEXT,
     stars INTEGER, description TEXT, created_at TEXT

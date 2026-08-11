@@ -178,6 +178,8 @@ td.actions { white-space:nowrap; }
 .badge-dispute  { background:var(--badge-dispute-bg);  color:var(--badge-dispute-text); }
 .badge-damaged  { background:var(--badge-damaged-bg);  color:var(--badge-damaged-text); }
 .profit-pos { color:var(--green); font-weight:700; } .profit-neg { color:var(--red); font-weight:700; } .profit-none { color:var(--text3); }
+.return-by-tag { font-size:10px; font-weight:600; color:var(--amber); margin-top:4px; white-space:nowrap; }
+.return-by-tag.overdue { color:var(--red); }
 .tracking-link { color:var(--blue); text-decoration:none; font-size:12px; font-family:monospace; }
 .tracking-link:hover { text-decoration:underline; }
 .tracking-plain { font-size:12px; color:var(--text2); font-family:monospace; }
@@ -1145,8 +1147,9 @@ async function sendEmail() {
       <div class="form-row" style="margin:0"><label>Sold $ (leave blank if unsold)</label><input id="f-sold" type="number" step="0.01" min="0" placeholder="0.00"></div>
     </div>
     <div class="form-row"><label>Status</label>
-      <select id="f-status"><option>Pending</option><option>Shipped by Supplier</option><option>Delivered at Home</option><option>Shipped to Buyer</option><option>SOLD</option><option>DISPUTE</option><option>DAMAGED</option></select>
+      <select id="f-status" onchange="toggleReturnByField()"><option>Pending</option><option>Shipped by Supplier</option><option>Delivered at Home</option><option>Shipped to Buyer</option><option>SOLD</option><option>DISPUTE</option><option>DAMAGED</option></select>
     </div>
+    <div class="form-row" id="return-by-row" style="display:none"><label>Return By</label><input id="f-return-by" type="date"><div class="form-hint">Last day the buyer can return this item</div></div>
     <div class="form-row"><label>Tracking Number</label><input id="f-tracking" placeholder="e.g. 9400111899223397123456" autocomplete="off"><div class="form-hint">Auto-detects USPS, UPS, FedEx, DHL</div></div>
     <div class="form-row"><label>Notes</label><textarea id="f-notes" placeholder="Any notes about this item..."></textarea></div>
     <div class="form-row" id="qty-row"><label>Quantity</label><input id="f-qty" type="number" min="1" max="500" value="1" oninput="updateSaveBtn()"><div class="form-hint">Set above 1 to add multiple copies at once</div></div>
@@ -1444,6 +1447,17 @@ function badge(status) {
 
 function hasSold(i){ var v=i.sold; return v!==''&&v!==null&&v!==undefined; }
 
+function returnByTag(i){
+  var rb = i.returnBy || i.return_by;
+  if (!rb || i.status !== 'DISPUTE') return '';
+  var d = new Date(rb + 'T00:00:00');
+  if (isNaN(d.getTime())) return '';
+  var today = new Date(); today.setHours(0,0,0,0);
+  var overdue = d.getTime() < today.getTime();
+  var label = (d.getMonth()+1)+'/'+d.getDate()+'/'+String(d.getFullYear()).slice(2);
+  return '<div class="return-by-tag'+(overdue?' overdue':'')+'">↩ Return by '+label+(overdue?' (overdue)':'')+'</div>';
+}
+
 function updateStats() {
   var profit=0,cost=0,sold=0,inv=0,sc=0,hc=0,ship=0,disp=0,dmg=0;
   items.forEach(function(i){ var c=parseFloat(i.cost)||0,s=parseFloat(i.sold)||0; cost+=c; 
@@ -1721,7 +1735,7 @@ function renderTable() {
       +'<td class="name" title="'+esc(i.name)+'">'+esc(i.name)+'</td>'
       +'<td class="money">'+(c>0?'$'+c.toFixed(2):'—')+'</td>'
       +'<td class="money">'+(hasSold(i)?'$'+s.toFixed(2):'—')+'</td>'
-      +'<td>'+badge(i.status)+'</td>'
+      +'<td>'+badge(i.status)+returnByTag(i)+'</td>'
       +'<td>'+th+'</td>'
       +'<td class="notes" title="'+esc(i.notes||'')+'">'+(esc(i.notes||'')||'—')+'</td>'
       +'<td class="date-col">'+fmtShortDateTime(i.addedAt||i.updatedAt||i.updatedat)+'</td>'
@@ -1784,6 +1798,7 @@ function renderMobileCards(filtered) {
       +  profitHtml
       +  '<span class="mob-card-date">'+fmtShortDateTime(i.addedAt||i.updatedAt||i.updatedat)+'</span>'
       +'</div>'
+      +returnByTag(i)
       +'<div class="mob-card-row">'
       +  (c>0?'<span class="mob-card-money">Cost <strong>$'+c.toFixed(2)+'</strong></span>':'')
       +  (hasSoldVal?'<span class="mob-card-money">Sold <strong>$'+s.toFixed(2)+'</strong></span>':'')
@@ -1794,8 +1809,9 @@ function renderMobileCards(filtered) {
   }).join('');
 }
 
-function openAddModal(){ editId=null; document.getElementById('modal-title').textContent='Add Product'; ['f-name','f-cost','f-sold','f-tracking','f-notes'].forEach(function(id){document.getElementById(id).value='';}); document.getElementById('f-status').value='Pending'; document.getElementById('f-qty').value='1'; document.getElementById('qty-row').style.display=''; document.getElementById('save-btn').textContent='Save'; document.getElementById('modal-overlay').classList.add('open'); document.getElementById('f-name').focus(); }
-function editItem(id){ var item=null; for(var i=0;i<items.length;i++){if(items[i].id===id){item=items[i];break;}} if(!item)return; editId=id; document.getElementById('modal-title').textContent='Edit Product'; document.getElementById('f-name').value=item.name||''; document.getElementById('f-cost').value=item.cost||''; document.getElementById('f-sold').value=item.sold||''; document.getElementById('f-status').value=item.status||'Pending'; document.getElementById('f-tracking').value=item.tracking||''; document.getElementById('f-notes').value=item.notes||''; document.getElementById('qty-row').style.display='none'; document.getElementById('save-btn').textContent='Save'; document.getElementById('modal-overlay').classList.add('open'); document.getElementById('f-name').focus(); }
+function toggleReturnByField(){ var show=document.getElementById('f-status').value==='DISPUTE'; document.getElementById('return-by-row').style.display=show?'':'none'; }
+function openAddModal(){ editId=null; document.getElementById('modal-title').textContent='Add Product'; ['f-name','f-cost','f-sold','f-tracking','f-notes','f-return-by'].forEach(function(id){document.getElementById(id).value='';}); document.getElementById('f-status').value='Pending'; document.getElementById('f-qty').value='1'; document.getElementById('qty-row').style.display=''; document.getElementById('save-btn').textContent='Save'; toggleReturnByField(); document.getElementById('modal-overlay').classList.add('open'); document.getElementById('f-name').focus(); }
+function editItem(id){ var item=null; for(var i=0;i<items.length;i++){if(items[i].id===id){item=items[i];break;}} if(!item)return; editId=id; document.getElementById('modal-title').textContent='Edit Product'; document.getElementById('f-name').value=item.name||''; document.getElementById('f-cost').value=item.cost||''; document.getElementById('f-sold').value=item.sold||''; document.getElementById('f-status').value=item.status||'Pending'; document.getElementById('f-tracking').value=item.tracking||''; document.getElementById('f-notes').value=item.notes||''; document.getElementById('f-return-by').value=item.returnBy||item.return_by||''; document.getElementById('qty-row').style.display='none'; document.getElementById('save-btn').textContent='Save'; toggleReturnByField(); document.getElementById('modal-overlay').classList.add('open'); document.getElementById('f-name').focus(); }
 function closeModal(){ document.getElementById('modal-overlay').classList.remove('open'); }
 function closeModalBg(e){ if(e.target===document.getElementById('modal-overlay'))closeModal(); }
 document.addEventListener('keydown',function(e){ if(e.key==='Escape'){closeModal();closeSettings();} });
@@ -1830,6 +1846,7 @@ async function saveItem(){
     status: newStatus,
     tracking: document.getElementById('f-tracking').value.trim(),
     notes: document.getElementById('f-notes').value.trim(),
+    returnBy: newStatus === 'DISPUTE' ? (document.getElementById('f-return-by').value || null) : null,
     // Preserve updatedAt for already-SOLD items so note edits don't bubble them up in Recent Sales
     updatedAt: (editId && oldItem && (oldItem.status === 'SOLD' || oldItem.status === 'Shipped to Buyer') && (newStatus === 'SOLD' || newStatus === 'Shipped to Buyer'))
       ? (oldItem.updatedAt || oldItem.updatedat || new Date().toISOString())
