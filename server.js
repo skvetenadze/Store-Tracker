@@ -150,17 +150,17 @@ const PIN_PAGE = `<!DOCTYPE html>
   .biometric-btn{margin-top:22px}.biometric-icon{background:#284538;border-color:#45705d;color:#a8ffd9;border-radius:15px}.biometric-lbl{color:#a3dec4;font-size:11px}.divider{margin-top:19px}.divider-line{background:#345044}.divider-txt{color:#829f92}
   @media(max-width:480px){body{padding:14px}.pin-box{padding:35px 25px 28px;border-radius:22px;max-width:100%}}
   /* Shared persisted accent from the dashboard Appearance control */
-  :root{--theme-hue:260;--accent:hsl(var(--theme-hue) 87% 69%);--accent-hi:hsl(var(--theme-hue) 95% 82%);--accent-soft:hsl(var(--theme-hue) 77% 64% / .17);--bg:hsl(var(--theme-hue) 26% 6%);--bg2:hsl(var(--theme-hue) 25% 12%);--border:hsl(var(--theme-hue) 22% 25%)}
-  body{background:radial-gradient(circle at 53% 19%,var(--accent-soft),transparent 29%),radial-gradient(circle at 91% 85%,var(--accent-soft),transparent 28%),var(--bg);color:#f7f5ff}
-  body::before{background-image:linear-gradient(hsl(var(--theme-hue) 65% 80% / .017) 1px,transparent 1px),linear-gradient(90deg,hsl(var(--theme-hue) 65% 80% / .017) 1px,transparent 1px)}
-  .pin-box{background:linear-gradient(155deg,var(--bg2),var(--bg));border-color:var(--border)}
+  :root{--theme-hue:260;--accent:hsl(var(--theme-hue) 88% 69%);--accent-hi:hsl(var(--theme-hue) 93% 80%);--accent-soft:hsl(var(--theme-hue) 83% 68% / .12);--bg:#0d0d0d;--bg2:#181818;--border:#303030}
+  body{background:var(--bg);color:#f0f0f0}
+  body::before{background-image:linear-gradient(rgba(255,255,255,.012) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.012) 1px,transparent 1px)}
+  .pin-box{background:linear-gradient(155deg,#1a1a1a,#141414);border-color:var(--border)}
   .pin-logo{background:linear-gradient(145deg,var(--accent-hi),var(--accent));box-shadow:0 7px 32px hsl(var(--theme-hue) 91% 65% / .36)}
-  .pin-sub{color:hsl(var(--theme-hue) 18% 69%)}
-  .pin-dot{border-color:hsl(var(--theme-hue) 20% 40%)}
+  .pin-sub{color:#aaaaaa}
+  .pin-dot{border-color:#555555}
   .pin-dot.filled{background:var(--accent);border-color:var(--accent-hi);box-shadow:0 0 15px hsl(var(--theme-hue) 90% 70% / .4)}
-  .pin-key{background:hsl(var(--theme-hue) 24% 17%);border-color:var(--border);color:#f7f5ff}
-  .pin-key:hover{background:hsl(var(--theme-hue) 25% 23%);border-color:var(--accent)}
-  .pin-key:active{background:hsl(var(--theme-hue) 25% 30%)}
+  .pin-key{background:#202020;border-color:#353535;color:#f0f0f0}
+  .pin-key:hover{background:#292929;border-color:var(--accent)}
+  .pin-key:active{background:#363636}
   .pin-key.del,.biometric-icon,.biometric-lbl{color:var(--accent-hi)}
   .biometric-icon{background:var(--accent-soft);border-color:var(--border)}
   .divider-line{background:var(--border)}
