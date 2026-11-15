@@ -2,8 +2,8 @@
 <html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Resell Tracker</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resell Tracker · Operations</title>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -603,6 +603,7 @@ tbody tr.selected { background:rgba(34,197,94,0.07) !important; }
 .pnl-tt-profit.neg { color:var(--red); }
 .pnl-tt-sub    { font-size:11px; color:var(--text3); }
 </style>
+<link rel="stylesheet" href="premium.css">
 
 <script>
 // Web replacement for Electron preload API. Keeps the app UI/functions the same.
@@ -963,150 +964,76 @@ async function sendEmail() {
   </div>
 </div>
 
-<nav class="topnav">
-  <div class="nav-logo">
-    <div class="nav-logo-icon">📦</div>
-    <span class="nav-logo-name">Resell Tracker</span>
+<nav class="topnav" aria-label="Primary navigation">
+  <div class="sidebar-brand">
+    <div class="brand-glyph"><svg class="ic" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 7 9-4 9 4v10l-9 4-9-4V7Z"/><path d="m3 7 9 4 9-4M12 11v10"/></svg></div>
+    <div class="brand-words"><strong>Resell<span>Tracker</span></strong><small>OPERATIONS STUDIO</small></div>
+    <span class="sidebar-brand-dot" aria-hidden="true"></span>
   </div>
+  <div class="sidebar-section-label">WORKSPACE</div>
   <div class="nav-tabs">
-    <button class="nav-tab active" id="tab-dashboard" onclick="switchTab('dashboard')">⊞ Dashboard</button>
-    <button class="nav-tab"        id="tab-inventory" onclick="switchTab('inventory')">🏠 Inventory</button>
-    <button class="nav-tab"        id="tab-suppliers" onclick="switchTab('suppliers')">🤝 Suppliers</button>
-    <button class="nav-tab"        id="tab-emails"    onclick="switchTab('emails')">🧾 Receipt</button>
-    <button class="nav-tab"        id="tab-settings"  onclick="switchTab('settings')">⚙ Settings</button>
+    <button class="nav-tab active" id="tab-dashboard" onclick="switchTab('dashboard')"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg> <span>Overview</span></button>
+    <button class="nav-tab" id="tab-inventory" onclick="switchTab('inventory')"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 7 9-4 9 4v10l-9 4-9-4V7Z"/><path d="m3 7 9 4 9-4M12 11v10"/></svg> <span>Inventory</span></button>
+    <button class="nav-tab" id="tab-suppliers" onclick="switchTab('suppliers')"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 20v-2a6 6 0 0 1 12 0v2M16 5a3 3 0 0 1 0 6m2 3a5 5 0 0 1 3 5"/></svg> <span>Suppliers</span></button>
+    <button class="nav-tab" id="tab-analytics" onclick="switchTab('analytics')"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="m6 16 5-6 4 3 6-8"/></svg> <span>Analytics & P&amp;L</span></button>
+    <button class="nav-tab" id="tab-emails" onclick="switchTab('emails')"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg> <span>Email templates</span></button>
   </div>
-  <div class="nav-actions">
-    <button class="lock-btn" onclick="doLock()" title="Lock">&#128274; Lock</button>
-    <button class="btn" onclick="importCSV()">⬆ Import CSV</button>
-    <button class="btn" onclick="exportCSV()">⬇ Export CSV</button>
-    <button class="btn btn-primary" onclick="openAddModal()">+ Add Product</button>
+  <div class="sidebar-spacer"></div>
+  <div class="sidebar-highlight"><div class="sidebar-highlight-icon"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 17 6-6 4 4 8-9"/><path d="M16 6h5v5"/></svg></div><strong>Every sale, in focus.</strong><p>Your business at a glance. Stay on top of every order.</p><button onclick="switchTab('analytics')">Explore analytics <svg class="ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button></div>
+  <div class="sidebar-section-label sidebar-utilities-label">PREFERENCES</div>
+  <div class="nav-tabs sidebar-utilities">
+    <button class="nav-tab" id="tab-settings" onclick="switchTab('settings')"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z"/><path d="m19.4 15 .1.1 1.5 1.2-1.5 2.6-1.9-.6a8 8 0 0 1-1.9 1.1l-.4 2h-3l-.4-2a8 8 0 0 1-1.9-1.1l-1.9.6-1.5-2.6 1.5-1.2a8 8 0 0 1 0-2.2l-1.5-1.2 1.5-2.6 1.9.6a8 8 0 0 1 1.9-1.1l.4-2h3l.4 2a8 8 0 0 1 1.9 1.1l1.9-.6 1.5 2.6-1.5 1.2a8 8 0 0 1 0 2.2Z" transform="translate(-1 -2) scale(.94)"/></svg> <span>Settings</span></button>
+    <button class="nav-tab" onclick="doLock()"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg> <span>Lock workspace</span></button>
   </div>
+  <div class="sidebar-profile"><div class="profile-avatar">RT</div><div class="profile-detail"><strong>My workspace</strong><small><span class="online-indicator"></span> Private dashboard</small></div><svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div>
 </nav>
+<div class="workspace-topbar">
+  <div class="topbar-identity"><span class="topbar-crumb">Workspace</span><span class="breadcrumb-slash">/</span><strong id="header-page-label">Overview</strong></div>
+  <div class="topbar-search"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input id="global-search" type="search" placeholder="Search inventory..." aria-label="Search inventory" oninput="globalSearch(this.value)"><kbd>⌘ K</kbd></div>
+  <div class="topbar-actions"><button class="top-action subdued" onclick="importCSV()" title="Import CSV"><svg class="ic" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V3m-5 5 5-5 5 5M4 16v4h16v-4"/></svg> <span>Import</span></button><button class="top-action subdued" onclick="exportCSV()" title="Export CSV"><svg class="ic" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v13m-5-5 5 5 5-5M4 18v3h16v-3"/></svg> <span>Export</span></button><button class="top-action primary" onclick="openAddModal()"><svg class="ic" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> <span>New item</span></button><button class="top-action icon-only" aria-label="Lock workspace" title="Lock" onclick="doLock()"><svg class="ic" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></button><div class="top-avatar">RT</div></div>
+</div>
 
 <div class="stats-bar">
   <div class="sstat"><div class="sstat-lbl">Total Profit</div><div class="sstat-val col-green" id="stat-profit">$0.00</div></div>
   <div class="sstat"><div class="sstat-lbl">Total Cost</div>  <div class="sstat-val col-red"   id="stat-cost">$0.00</div></div>
   <div class="sstat"><div class="sstat-lbl">Total Sold</div>  <div class="sstat-val col-red"   id="stat-sold">$0.00</div></div>
   <div class="sstat"><div class="sstat-lbl">Inventory Value</div><div class="sstat-val col-green" id="stat-inv">$0.00</div></div>
-  <div class="sbar-chips">
-    <span class="chip ch-sold"    id="chip-sold"    onclick="chipFilter('SOLD')"             title="Filter: Sold">✓ <span id="bd-sold">0</span> Sold</span>
-    <span class="chip ch-home"    id="chip-home"    onclick="chipFilter('Delivered at Home')" title="Filter: Home">🏠 <span id="bd-home">0</span> Home</span>
-    <span class="chip ch-ship"    id="chip-shipped" onclick="chipFilter('shipped')"           title="Filter: Shipped">🚚 <span id="bd-shipped">0</span> Shipped</span>
-    <span class="chip ch-dispute" id="chip-dispute" onclick="chipFilter('DISPUTE')"           title="Filter: Dispute">⚠ <span id="bd-dispute">0</span> Dispute</span>
-    <span class="chip ch-damaged" id="chip-damaged" onclick="chipFilter('DAMAGED')"           title="Filter: Damaged">✕ <span id="bd-damaged">0</span> Damaged</span>
-  </div>
+
 </div>
 
 <!-- DASHBOARD VIEW -->
-<div class="view active" id="view-dashboard">
-  <div class="dash-area">
-    <div class="cards-grid">
-      <div class="stat-card">
-        <div class="card-header"><span class="card-title">Total Profit</span><button class="card-link" onclick="switchTab('inventory')">View all →</button></div>
-        <div class="card-value col-green" id="card-profit">$0.00</div>
-        <div class="card-chart-lbl">Activity Over Time</div>
-        <svg class="card-chart" id="chart-profit" viewBox="0 0 300 90" preserveAspectRatio="xMidYMid meet"></svg>
-      </div>
-      <div class="stat-card">
-        <div class="card-header"><span class="card-title">Total Sold</span><button class="card-link" onclick="switchTab('inventory')">View all →</button></div>
-        <div class="card-value col-red" id="card-sold">$0.00</div>
-        <div class="card-chart-lbl">Activity Over Time</div>
-        <svg class="card-chart" id="chart-sold" viewBox="0 0 300 90" preserveAspectRatio="xMidYMid meet"></svg>
-      </div>
-      <div class="stat-card">
-        <div class="card-header"><span class="card-title">Monthly P&amp;L</span><span id="pnl-year-label" style="font-size:12px;color:var(--text3);font-weight:600"></span></div>
-        <div class="card-value col-green" id="card-inv">$0.00</div>
-        <div class="card-chart-lbl">YTD Profit by Month</div>
-        <div class="pnl-grid" id="pnl-grid"></div>
-      </div>
-      <div class="stat-card">
-        <div class="card-header"><span class="card-title">Items Sold</span><button class="card-link" onclick="switchTab('inventory')">View all →</button></div>
-        <div class="card-value col-text" id="card-count">0</div>
-        <div class="card-chart-lbl">Activity Over Time</div>
-        <svg class="card-chart" id="chart-count" viewBox="0 0 300 90" preserveAspectRatio="xMidYMid meet"></svg>
-      </div>
+<div class="view active" id="view-dashboard"><div class="dash-area">
+  <div class="page-hero"><div><div class="eyebrow"><span class="eyebrow-dot"></span> BUSINESS OVERVIEW <span class="hero-date" id="hero-date"></span></div><h1>Welcome back <span class="wave">✳</span></h1><p>Here's what's happening across your resale business.</p></div><div class="hero-actions"><button class="btn" onclick="switchTab('analytics')"><svg class="ic" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="m6 16 5-6 4 3 6-8"/></svg> View reports</button></div></div>
+  <div class="cards-grid">
+    <div class="stat-card kpi-chart-card"><div class="kpi-top"><span class="kpi-icon violet"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 17 6-6 4 4 8-8"/><path d="M16 7h5v5"/></svg></span><span class="kpi-context">ALL TIME</span></div><div class="kpi-label">Total Profit</div><div class="card-value" id="card-profit">$0.00</div><div class="kpi-footer"><span>Net from recorded sales</span><svg class="kpi-mini" id="chart-profit" viewBox="0 0 300 90" preserveAspectRatio="xMidYMid meet"></svg></div></div>
+    <div class="stat-card kpi-chart-card"><div class="kpi-top"><span class="kpi-icon blue"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="5" width="19" height="15" rx="3"/><path d="M17 11h4.5v5H17a2.5 2.5 0 0 1 0-5Z"/><path d="M6 5V3h13"/></svg></span><span class="kpi-context">ALL TIME</span></div><div class="kpi-label">Total Revenue</div><div class="card-value" id="card-sold">$0.00</div><div class="kpi-footer"><span>Recorded sold value</span><svg class="kpi-mini" id="chart-sold" viewBox="0 0 300 90" preserveAspectRatio="xMidYMid meet"></svg></div></div>
+    <div class="stat-card"><div class="kpi-top"><span class="kpi-icon rose"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 7 9-4 9 4v10l-9 4-9-4V7Z"/><path d="m3 7 9 4 9-4M12 11v10"/></svg></span><span class="kpi-context">ALL TIME</span></div><div class="kpi-label">Inventory at Home</div><div class="card-value" id="card-inv">$0.00</div><div class="kpi-footer"><span>Cost of on-hand items</span><span class="kpi-neutral-art" aria-hidden="true">◇</span></div></div>
+    <div class="stat-card kpi-chart-card"><div class="kpi-top"><span class="kpi-icon amber"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg></span><span class="kpi-context">ALL TIME</span></div><div class="kpi-label">Items Sold</div><div class="card-value" id="card-count">$0.00</div><div class="kpi-footer"><span>Completed orders</span><svg class="kpi-mini" id="chart-count" viewBox="0 0 300 90" preserveAspectRatio="xMidYMid meet"></svg></div></div>
+  </div>
+  <div class="dashboard-composition">
+    <div class="dashboard-main-stack">
+      <section class="panel revenue-panel"><div class="panel-heading"><div><div class="panel-eyebrow">PERFORMANCE</div><h2>Revenue overview</h2><p>Sales performance across the last eight weeks</p></div><div class="live-tag"><span></span> LIVE DATA</div></div><div class="chart-total-row"><div><div class="chart-total-label">Total revenue</div><div class="chart-total" id="feature-revenue">$0.00</div></div><span class="chart-key"><i></i> Weekly revenue</span></div><div class="feature-chart-wrap"><svg id="feature-chart" viewBox="0 0 700 250" role="img" aria-label="Revenue trend in the last eight weeks" preserveAspectRatio="xMidYMid meet"></svg></div><div id="feature-chart-empty" class="chart-empty-note" hidden>No completed sales in this period yet.</div></section>
+      <section class="panel recent-panel"><div class="panel-heading compact"><div><div class="panel-eyebrow">ACTIVITY</div><h2>Recent sales</h2></div><button class="panel-link" onclick="switchTab('inventory')">See inventory <svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button></div><div class="recent-box"><div id="recent-empty" class="recent-empty">No sales recorded yet</div><table id="recent-table" style="display:none"><thead><tr><th>Product</th><th>Cost</th><th>Revenue</th><th>Profit</th><th>Notes</th></tr></thead><tbody id="recent-tbody"></tbody></table></div></section>
     </div>
-    <div class="week-sec">
-      <div class="week-box">
-        <div class="week-box-header">
-          <div class="week-title" id="week-title">Last 7 Days</div>
-          <div style="display:flex;align-items:center;gap:8px;">
-            <div class="pill-toggle" id="period-toggle">
-              <button class="pill-opt" onclick="setPeriod(0)">1D</button>
-              <button class="pill-opt active" onclick="setPeriod(7)">7D</button>
-              <button class="pill-opt" onclick="setPeriod(14)">2W</button>
-              <button class="pill-opt" onclick="setPeriod(30)">1M</button>
-            </div>
-            <div class="week-badge" id="week-range"></div>
-          </div>
-        </div>
-        <div class="week-stats">
-          <div class="week-stat">
-            <div class="week-stat-lbl">Profit</div>
-            <div class="week-stat-val col-green" id="week-profit">$0.00</div>
-            <div class="week-stat-sub" id="week-profit-sub">from 0 sales</div>
-          </div>
-          <div class="week-stat">
-            <div class="week-stat-lbl">Items Sold</div>
-            <div class="week-stat-val col-text" id="week-qty">0</div>
-            <div class="week-stat-sub">units</div>
-          </div>
-          <div class="week-stat">
-            <div class="week-stat-lbl">Total Cost</div>
-            <div class="week-stat-val col-red" id="week-cost">$0.00</div>
-            <div class="week-stat-sub">what you spent</div>
-          </div>
-          <div class="week-stat">
-            <div class="week-stat-lbl">Total Revenue</div>
-            <div class="week-stat-val col-text" id="week-revenue">$0.00</div>
-            <div class="week-stat-sub" id="week-margin-sub">— margin</div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="recent-sec">
-      <div class="recent-title">Recent Sales</div>
-      <div class="recent-box">
-        <div id="recent-empty" class="recent-empty">No sales recorded yet</div>
-        <table id="recent-table" style="display:none">
-          <thead><tr><th style="width:240px">Product</th><th style="width:100px">Cost $</th><th style="width:100px">Sold $</th><th style="width:100px">Profit</th><th>Notes</th></tr></thead>
-          <tbody id="recent-tbody"></tbody>
-        </table>
-      </div>
-    </div>
-    <div class="insights-sec">
-      <div class="insights-title">Insights</div>
-      <div class="insights-grid">
-        <div class="insight-card">
-          <div class="insight-lbl">Top Sellers (30d)</div>
-          <div id="insight-top-sellers"><div class="insight-empty">No sales yet</div></div>
-        </div>
-        <div class="insight-card">
-          <div class="insight-lbl">Today vs Yesterday</div>
-          <div class="insight-val col-text" id="insight-day-val">$0.00</div>
-          <div class="insight-sub" id="insight-day-sub">no sales today</div>
-          <div class="insight-delta flat" id="insight-day-delta">—</div>
-        </div>
-        <div class="insight-card">
-          <div class="insight-lbl">This Week vs Last Week</div>
-          <div class="insight-val col-text" id="insight-week-val">$0.00</div>
-          <div class="insight-sub" id="insight-week-sub">no sales this week</div>
-          <div class="insight-delta flat" id="insight-week-delta">—</div>
-        </div>
-        <div class="insight-card">
-          <div class="insight-lbl">Most Profitable Items (90d)</div>
-          <div id="insight-top-items"><div class="insight-empty">No sales yet</div></div>
-        </div>
-      </div>
+    <div class="dashboard-side-stack">
+      <section class="panel pulse-panel"><div class="panel-heading compact"><div><div class="panel-eyebrow">NEEDS ATTENTION</div><h2>Operations pulse</h2></div><span class="tiny-label">TODAY</span></div><div id="operations-list" class="ops-list"><div class="empty-mini">Loading activity...</div></div></section>
+      <section class="panel quick-panel"><div class="panel-heading compact"><div><div class="panel-eyebrow">SHORTCUTS</div><h2>Quick actions</h2></div></div><div class="quick-actions"><button onclick="openAddModal()"><span><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span>Add item</button><button onclick="openSupModal()"><span><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 20v-2a6 6 0 0 1 12 0v2M16 5a3 3 0 0 1 0 6m2 3a5 5 0 0 1 3 5"/></svg></span>Supplier</button></div></section>
+      <section class="panel status-panel"><div class="panel-heading compact"><div><div class="panel-eyebrow">INVENTORY</div><h2>Status breakdown</h2></div></div><div id="status-distribution" class="status-distribution"></div></section>
+      <section class="panel incoming-panel"><div class="panel-heading compact"><div><div class="panel-eyebrow">INBOUND SHIPMENTS</div><h2>Coming your way</h2><p>Grouped by update date and tracking number</p></div><span class="shipment-live-dot" title="Live inventory data"></span></div><div id="shipment-batches" class="shipment-batches" aria-live="polite"><div class="empty-mini">Loading shipments...</div></div><button class="shipment-view-all" type="button" onclick="chipFilter('Shipped by Supplier')">View supplier shipments <span aria-hidden="true">→</span></button></section>
     </div>
   </div>
-</div>
+  <section class="week-sec"><div class="week-box"><div class="week-box-header"><div><div class="panel-eyebrow">PERIOD SNAPSHOT</div><div class="week-title" id="week-title">Last 7 Days</div></div><div class="period-chooser"><div class="pill-toggle" id="period-toggle"><button class="pill-opt" onclick="setPeriod(0)">1D</button><button class="pill-opt active" onclick="setPeriod(7)">7D</button><button class="pill-opt" onclick="setPeriod(14)">2W</button><button class="pill-opt" onclick="setPeriod(30)">1M</button></div><span id="week-range" class="week-badge"></span></div></div><div class="week-stats"><div class="week-stat"><div class="week-stat-lbl">Net profit</div><div class="week-stat-val" id="week-profit">$0.00</div><div class="week-stat-sub" id="week-profit-sub">from 0 sales</div></div><div class="week-stat"><div class="week-stat-lbl">Items sold</div><div class="week-stat-val" id="week-qty">0</div><div class="week-stat-sub">units</div></div><div class="week-stat"><div class="week-stat-lbl">Total cost</div><div class="week-stat-val" id="week-cost">$0.00</div><div class="week-stat-sub">what you spent</div></div><div class="week-stat"><div class="week-stat-lbl">Revenue</div><div class="week-stat-val" id="week-revenue">$0.00</div><div class="week-stat-sub" id="week-margin-sub">— margin</div></div></div></div></section>
+</div></div>
+
+<!-- ANALYTICS VIEW -->
+<div class="view" id="view-analytics"><div class="dash-area analytics-area"><div class="page-hero"><div><div class="eyebrow"><span class="eyebrow-dot"></span> FINANCIAL REPORTING</div><h1>Analytics &amp; P&amp;L</h1><p>Understand your margins, momentum, and best-performing products.</p></div><div class="hero-actions"><button class="btn" onclick="exportCSV()"><svg class="ic" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v13m-5-5 5 5 5-5M4 18v3h16v-3"/></svg> Export data</button></div></div><div class="analytics-top-grid"><section class="panel pnl-panel"><div class="panel-heading"><div><div class="panel-eyebrow">YEAR-TO-DATE</div><h2>Monthly profit &amp; loss</h2><p>Net earnings from recorded sales in <span id="pnl-year-label"></span></p></div><div id="analytics-ytd" class="analytics-ytd">$0.00</div></div><div id="pnl-grid" class="pnl-grid"></div></section><section class="panel analytics-side-panel"><div class="panel-heading compact"><div><div class="panel-eyebrow">AT A GLANCE</div><h2>Business totals</h2></div></div><div class="analytic-totals"><div><span>Lifetime profit</span><strong id="ana-profit">$0.00</strong></div><div><span>Total revenue</span><strong id="ana-revenue">$0.00</strong></div><div><span>Total purchase cost</span><strong id="ana-cost">$0.00</strong></div><div><span>Average margin</span><strong id="ana-margin">0%</strong></div></div></section></div><div class="insights-sec"><div class="section-head"><div><div class="panel-eyebrow">DEEPER INSIGHTS</div><h2>What your numbers say</h2></div></div><div class="insights-grid"><div class="insight-card"><div class="insight-lbl">Top sellers · 30 days</div><div id="insight-top-sellers"><div class="insight-empty">No sales yet</div></div></div><div class="insight-card"><div class="insight-lbl">Today vs yesterday</div><div class="insight-val" id="insight-day-val">$0.00</div><div class="insight-sub" id="insight-day-sub">No sales today</div><div class="insight-delta flat" id="insight-day-delta">—</div></div><div class="insight-card"><div class="insight-lbl">This week vs last week</div><div class="insight-val" id="insight-week-val">$0.00</div><div class="insight-sub" id="insight-week-sub">No sales this week</div><div class="insight-delta flat" id="insight-week-delta">—</div></div><div class="insight-card"><div class="insight-lbl">Most profitable · 90 days</div><div id="insight-top-items"><div class="insight-empty">No sales yet</div></div></div></div></div></div></div>
 
 <!-- INVENTORY VIEW -->
 <div class="view" id="view-inventory">
+  <div class="inventory-page-header"><div><div class="eyebrow"><span class="eyebrow-dot"></span> PRODUCT OPERATIONS</div><h1>Inventory</h1><p>Track every product, from sourcing to sold.</p></div><button class="btn btn-primary" onclick="openAddModal()"><svg class="ic" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> Add product</button></div>
   <div class="toolbar">
     <input type="text" id="search" placeholder="🔍  Search products..." oninput="renderTable()">
-    <select id="status-filter" onchange="renderTable()">
+    <select id="status-filter" onchange="inventoryStatusChanged()">
       <option value="">All Statuses</option>
       <option>Pending</option><option>Shipped by Supplier</option><option>Delivered at Home</option>
       <option>Shipped to Buyer</option><option>SOLD</option><option>DISPUTE</option><option>DAMAGED</option>
@@ -1118,6 +1045,13 @@ async function sendEmail() {
     </select>
     <span class="item-count" id="count-label"></span>
   </div>
+  <div class="inventory-status-strip"><div class="filter-caption">QUICK FILTERS</div>  <div class="sbar-chips inventory-filter-chips">
+    <span class="chip ch-sold"    id="chip-sold"    onclick="chipFilter('SOLD')"             title="Filter: Sold">✓ <span id="bd-sold">0</span> Sold</span>
+    <span class="chip ch-home"    id="chip-home"    onclick="chipFilter('Delivered at Home')" title="Filter: Home">🏠 <span id="bd-home">0</span> Home</span>
+    <span class="chip ch-ship"    id="chip-shipped" onclick="chipFilter('shipped')"           title="Filter: Shipped">🚚 <span id="bd-shipped">0</span> Shipped</span>
+    <span class="chip ch-dispute" id="chip-dispute" onclick="chipFilter('DISPUTE')"           title="Filter: Dispute">⚠ <span id="bd-dispute">0</span> Dispute</span>
+    <span class="chip ch-damaged" id="chip-damaged" onclick="chipFilter('DAMAGED')"           title="Filter: Damaged">✕ <span id="bd-damaged">0</span> Damaged</span>
+  </div></div>
   <div class="table-area">
     <table>
       <thead><tr>
@@ -1160,6 +1094,7 @@ async function sendEmail() {
 <!-- SUPPLIERS VIEW -->
 
 <div class="view" id="view-emails">
+  <div class="email-page-header"><div class="eyebrow"><span class="eyebrow-dot"></span> COMMUNICATION TOOLS</div><h1>Email templates</h1><p>Create, customize, and send beautifully branded messages.</p></div>
   <div class="email-layout">
     <!-- LEFT PANEL -->
     <div class="email-left">
@@ -1236,7 +1171,7 @@ async function sendEmail() {
 <div class="view" id="view-suppliers">
   <div class="sup-area">
     <div class="sup-hdr">
-      <div class="sup-hdr-text"><h2>Suppliers</h2><p>Manage your supplier relationships</p></div>
+      <div class="sup-hdr-text"><div class="eyebrow"><span class="eyebrow-dot"></span> YOUR NETWORK</div><h2>Suppliers</h2><p>People behind your products. All in one place.</p></div>
       <button class="btn btn-primary" onclick="openSupModal()">+ Add Supplier</button>
     </div>
     <div class="sup-grid" id="sup-grid"></div>
@@ -1287,6 +1222,23 @@ async function sendEmail() {
         <div class="theme-lbl">Theme<small>Switch between dark and light mode</small></div>
         <div class="pill-toggle"><button class="pill-opt active" id="theme-dark" onclick="setTheme('dark')">🌙 Dark</button><button class="pill-opt" id="theme-light" onclick="setTheme('light')">☀ Light</button></div>
       </div>
+      <div class="accent-customizer" id="accent-customizer">
+        <div class="accent-heading">
+          <div><strong>Workspace color</strong><small>Choose a color. The entire interface and its matching shades update automatically.</small></div>
+          <span class="accent-live-swatch" id="accent-live-swatch" aria-hidden="true"></span>
+        </div>
+        <div class="accent-presets" role="group" aria-label="Color presets">
+          <button class="accent-preset" type="button" data-accent-hue="260" onclick="setAccentHue(260)"><i style="--swatch-hue:260"></i>Purple</button>
+          <button class="accent-preset" type="button" data-accent-hue="152" onclick="setAccentHue(152)"><i style="--swatch-hue:152"></i>Green</button>
+          <button class="accent-preset" type="button" data-accent-hue="28" onclick="setAccentHue(28)"><i style="--swatch-hue:28"></i>Orange</button>
+          <button class="accent-preset" type="button" data-accent-hue="216" onclick="setAccentHue(216)"><i style="--swatch-hue:216"></i>Blue</button>
+          <button class="accent-preset" type="button" data-accent-hue="327" onclick="setAccentHue(327)"><i style="--swatch-hue:327"></i>Pink</button>
+        </div>
+        <label class="accent-slider-label" for="accent-hue">Fine tune color <span id="accent-hue-label">Purple · 260°</span></label>
+        <input class="accent-hue-slider" id="accent-hue" type="range" min="0" max="359" step="1" value="260" oninput="setAccentHue(this.value)" aria-label="Adjust website color hue">
+        <div class="accent-slider-endpoints"><span>0°</span><span>180°</span><span>359°</span></div>
+        <div class="accent-note">Your choice is saved to this browser. Inventory status badge colors stay independent.</div>
+      </div>
     </div>
     <div class="settings-sec">
       <div class="settings-sec-title"><span>Status Badge Colors</span><button class="btn btn-reset" onclick="resetColors()">↺ Reset</button></div>
@@ -1321,17 +1273,43 @@ async function sendEmail() {
 </div>
 
 <script>
-var items = [], editId = null, currentTab = 'dashboard', activeChip = null, currentTheme = 'dark', customColors = {};
+var items = [], editId = null, currentTab = 'dashboard', activeChip = null, currentTheme = 'dark', customColors = {}, accentHue = 260;
 
 var DEF_DARK = { pending:{text:'#a78bfa',bg:'#2e1065'}, supplier:{text:'#86efac',bg:'#14532d'}, home:{text:'#60a5fa',bg:'#1e3a5f'}, buyer:{text:'#fbbf24',bg:'#451a03'}, sold:{text:'#ffd6d6',bg:'#ff5c5c'}, dispute:{text:'#f87171',bg:'#7f1d1d'}, damaged:{text:'#aaaaaa',bg:'#262626'} };
-var DEF_LIGHT = { pending:{text:'#6d28d9',bg:'#ede9fe'}, supplier:{text:'#166534',bg:'#dcfce7'}, home:{text:'#1d4ed8',bg:'#dbeafe'}, buyer:{text:'#92400e',bg:'#fef3c7'}, sold:{text:'#ffd6d6',bg:'#ff5c5c'}, dispute:{text:'#991b1b',bg:'#fee2e2'}, damaged:{text:'#6b7280',bg:'#f3f4f6'} };
+var DEF_LIGHT = { pending:{text:'#6d28d9',bg:'#ede9fe'}, supplier:{text:'#166534',bg:'#dcfce7'}, home:{text:'#1d4ed8',bg:'#dbeafe'}, buyer:{text:'#92400e',bg:'#fef3c7'}, sold:{text:'#14532d',bg:'#dcfce7'}, dispute:{text:'#991b1b',bg:'#fee2e2'}, damaged:{text:'#6b7280',bg:'#f3f4f6'} };
 var CKEYS = ['pending','supplier','home','buyer','sold','dispute','damaged'];
 
 function loadSettings() {
   try { currentTheme = localStorage.getItem('rt-theme') || 'dark'; } catch(e){}
   try { customColors = JSON.parse(localStorage.getItem('rt-colors')||'{}'); } catch(e){ customColors={}; }
+  // One-time return to the exact original inventory badge palette requested for this update.
+  // Future user edits continue to persist normally.
+  try { if(localStorage.getItem('rt-original-badges-v1')!=='1') { customColors={}; localStorage.removeItem('rt-colors'); localStorage.setItem('rt-original-badges-v1','1'); } } catch(e){}
+  try { var storedHue = localStorage.getItem('rt-accent-hue'); if(storedHue !== null) accentHue = Number(storedHue); } catch(e){}
+  applyAccentHue(accentHue, false);
   applyTheme(currentTheme, false);
   applyAllColors();
+}
+function setAccentHue(hue) { applyAccentHue(hue, true); }
+function applyAccentHue(hue, save) {
+  var h = Number(hue);
+  if (!Number.isFinite(h)) h = 260;
+  accentHue = ((Math.round(h) % 360) + 360) % 360;
+  document.documentElement.style.setProperty('--theme-hue', String(accentHue));
+  if (save) { try { localStorage.setItem('rt-accent-hue', String(accentHue)); } catch(e) {} }
+  var slider = document.getElementById('accent-hue');
+  if (slider) slider.value = String(accentHue);
+  var presets = [[260,'Purple'],[152,'Green'],[28,'Orange'],[216,'Blue'],[327,'Pink']];
+  document.querySelectorAll('.accent-preset').forEach(function(btn){
+    btn.classList.toggle('active', Number(btn.getAttribute('data-accent-hue')) === accentHue);
+  });
+  var nearest = presets.reduce(function(best,p){
+    var distance = Math.abs(p[0]-accentHue); distance = Math.min(distance, 360-distance);
+    return distance < best.distance ? {distance: distance, name:p[1]} : best;
+  }, {distance:361,name:'Custom'});
+  var label = document.getElementById('accent-hue-label');
+  if (label) label.textContent = (nearest.distance < 7 ? nearest.name : 'Custom') + ' · ' + accentHue + '°';
+  if (Array.isArray(items) && items.length && currentTab === 'dashboard') buildCharts();
 }
 function setTheme(t) { applyTheme(t, true); }
 function applyTheme(t, save) {
@@ -1376,20 +1354,29 @@ function closeSettingsBg(e) { if(e.target===document.getElementById('settings-ov
 function switchTab(tab) {
   if (tab==='settings') { openSettings(); return; }
   currentTab = tab;
-  ['dashboard','inventory','suppliers','emails'].forEach(function(t) {
+  toggleMobileMore(false);
+  var pages = {dashboard:'Overview', inventory:'Inventory', suppliers:'Suppliers', analytics:'Analytics & P&L', emails:'Email templates'};
+  var label=document.getElementById('header-page-label'); if(label)label.textContent=pages[tab]||'Overview';
+  ['dashboard','inventory','suppliers','emails','analytics'].forEach(function(t) {
     var te=document.getElementById('tab-'+t), ve=document.getElementById('view-'+t);
     if(te) te.classList.toggle('active',t===tab);
     if(ve) ve.classList.toggle('active',t===tab);
   });
   document.getElementById('tab-settings').classList.remove('active');
   // Sync bottom nav
-  ['dashboard','inventory','suppliers','emails','settings'].forEach(function(t){
+  ['dashboard','inventory','suppliers','emails','analytics','settings'].forEach(function(t){
     var el=document.getElementById('bnav-'+t); if(el) el.classList.toggle('active',t===tab);
   });
-  if (tab==='inventory') { document.getElementById('status-filter').value=''; activeChip=null; setChipActive(null); renderTable(); }
+  if (tab==='inventory') { document.getElementById('status-filter').value='Delivered at Home'; activeChip=null; setChipActive('Delivered at Home'); renderTable(); }
   if (tab==='dashboard') { buildCharts(); renderWeekly(); renderPnl(); renderRecent(); renderInsights(); }
   if (tab==='suppliers') { renderSuppliers(); }
+  if (tab==='analytics') { renderPnl(); renderInsights(); renderOperationalExtras(); }
   if (tab==='emails') { loadEmailTemplates(); parseTemplate(); }
+}
+
+function inventoryStatusChanged() {
+  // Explicit dropdown selections always override an earlier quick-chip choice.
+  activeChip=null; setChipActive(document.getElementById('status-filter').value); renderTable();
 }
 
 function chipFilter(status) {
@@ -1476,6 +1463,7 @@ function updateStats() {
   document.getElementById('card-sold').textContent='$'+sold.toFixed(2);
   document.getElementById('card-inv').textContent='$'+inv.toFixed(2);
   document.getElementById('card-count').textContent=sc;
+  renderOperationalExtras();
 }
 
 function buildCharts() {
@@ -1501,15 +1489,21 @@ function buildCharts() {
     }
   });
   var labels=buckets.map(function(b,idx){var d=new Date(idx===N-1?b.end:b.start);return(d.getMonth()+1)+'/'+d.getDate();});
-  drawChart('chart-profit',buckets.map(function(b){return b.profit;}),'#22c55e',labels,true);
-  drawChart('chart-sold',  buckets.map(function(b){return b.sold;  }),'#f87171',labels,true);
+  drawChart('chart-profit',buckets.map(function(b){return b.profit;}),'#48d5a2',labels,true);
+  drawChart('chart-sold',  buckets.map(function(b){return b.sold;  }),'hsl('+accentHue+' 87% 73%)',labels,true);
   //drawChart('chart-inv',   buckets.map(function(b){return b.inv;   }),'#22c55e',labels,true);
-  drawChart('chart-count', buckets.map(function(b){return b.cnt;   }),'#fbbf24',labels,false);
+  drawChart('chart-count', buckets.map(function(b){return b.cnt;   }),'hsl('+accentHue+' 87% 77%)',labels,false);
+  renderFeatureChart(buckets, labels);
 }
 
 function drawChart(id, vals, color, labels, isDollar) {
   var svg=document.getElementById(id); if(!svg) return;
-  var W=300,H=90,pL=30,pR=8,pT=10,pB=24,iW=W-pL-pR,iH=H-pT-pB,n=vals.length;
+  // Use the rendered chart dimensions rather than squeezing all charts into a fixed mini SVG.
+  var W=Math.max(120,Math.round(svg.clientWidth||250));
+  var H=Math.max(65,Math.round(svg.clientHeight||108));
+  svg.setAttribute('viewBox','0 0 '+W+' '+H);
+  svg.setAttribute('preserveAspectRatio','xMidYMid meet');
+  var pL=3,pR=3,pT=13,pB=4,iW=W-pL-pR,iH=H-pT-pB,n=vals.length;
   var sorted=vals.slice().filter(function(v){return v>0;}).sort(function(a,b){return b-a;});
   var trueMax=sorted[0]||1, secondMax=sorted[1]||0;
   var scaleMax=(trueMax>secondMax*3&&secondMax>0)?secondMax*1.5:trueMax;
@@ -1521,28 +1515,18 @@ function drawChart(id, vals, color, labels, isDollar) {
   html+='<linearGradient id="'+gid+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="'+color+'" stop-opacity="0.85"/><stop offset="100%" stop-color="'+color+'" stop-opacity="0.3"/></linearGradient>';
   html+='<pattern id="hatch'+id+'" patternUnits="userSpaceOnUse" width="5" height="5" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5" stroke="'+color+'" stroke-width="2" opacity="0.5"/></pattern>';
   html+='</defs>';
-  [0,scaleMax*0.5,scaleMax].forEach(function(tv){
-    var ty=py(tv);
-    var lbl=isDollar?(tv>=1000?'$'+(tv/1000).toFixed(1)+'k':'$'+tv.toFixed(0)):tv.toFixed(0);
-    html+='<text x="'+(pL-3)+'" y="'+(ty+4)+'" text-anchor="end" fill="currentColor" font-size="8" opacity="0.45">'+lbl+'</text>';
-    html+='<line x1="'+pL+'" y1="'+ty+'" x2="'+(W-pR)+'" y2="'+ty+'" stroke="currentColor" stroke-width="0.5" opacity="0.1"/>';
-  });
-  var gap=2, barW=(iW/n)-gap;
+  var gap=Math.max(4,Math.min(9,W/33)), barW=Math.max(4,(iW/n)-gap);
   for(var i=0;i<n;i++){
     var bx=pL+(i/n)*iW+(gap/2);
     var isClipped=vals[i]>scaleMax;
     var topY=isClipped?pT:py(vals[i]);
-    var bh=baseY-topY; if(bh<0) bh=0;
+    var bh=Math.max(3,baseY-topY); if(vals[i]<=0)topY=baseY-bh;
     html+='<rect class="chart-bar" x="'+bx.toFixed(1)+'" y="'+topY.toFixed(1)+'" width="'+barW.toFixed(1)+'" height="'+bh.toFixed(1)+'" rx="2" fill="url(#'+gid+')" opacity="'+(vals[i]>0?'1':'0.18')+'" data-label="'+labels[i]+'" data-val="'+vals[i]+'" data-dollar="'+isDollar+'"/>';
     if(isClipped){
       html+='<rect x="'+bx.toFixed(1)+'" y="'+pT+'" width="'+barW.toFixed(1)+'" height="8" rx="2" fill="url(#hatch'+id+')" pointer-events="none"/>';
       html+='<text x="'+(bx+barW/2).toFixed(1)+'" y="'+(pT-2)+'" text-anchor="middle" fill="'+color+'" font-size="8" opacity="0.9">&#9650;</text>';
     }
   }
-  [0,Math.floor(n/3),Math.floor(2*n/3),n-1].forEach(function(si){
-    var lx=pL+(si/n)*iW+(gap/2)+barW/2;
-    html+='<text x="'+lx.toFixed(1)+'" y="'+(H-5)+'" text-anchor="middle" fill="currentColor" font-size="8" opacity="0.4">'+labels[si]+'</text>';
-  });
   svg.innerHTML=html;
   var bars=svg.querySelectorAll('.chart-bar');
   var tip=document.getElementById('chart-tooltip');
@@ -1722,7 +1706,7 @@ function renderTable() {
   }
   document.getElementById('count-label').textContent=filtered.length===items.length?items.length+' items':filtered.length+' of '+items.length+' items';
   var tbody=document.getElementById('tbody'), empty=document.getElementById('empty-state');
-  if(filtered.length===0){ tbody.innerHTML=''; empty.style.display=''; empty.querySelector('p').textContent=items.length===0?'No products yet':'No products match your search'; empty.querySelector('small').textContent=items.length===0?'Click "+ Add Product" to log your first item':'Try clearing your search or filter'; return; }
+  if(filtered.length===0){ tbody.innerHTML=''; empty.style.display=''; empty.querySelector('p').textContent=items.length===0?'No products yet':'No products match your search'; empty.querySelector('small').textContent=items.length===0?'Click "+ Add Product" to log your first item':'Try clearing your search or filter'; renderMobileCards(filtered); return; }
   empty.style.display='none';
   tbody.innerHTML=filtered.map(function(i){
     var c=parseFloat(i.cost)||0,s=parseFloat(i.sold)||0;
@@ -1740,7 +1724,7 @@ function renderTable() {
       +'<td class="notes" title="'+esc(i.notes||'')+'">'+(esc(i.notes||'')||'—')+'</td>'
       +'<td class="date-col">'+fmtShortDateTime(i.addedAt||i.updatedAt||i.updatedat)+'</td>'
       +'<td>'+ph+'</td>'
-      +'<td class="actions"><button class="act-btn" onclick="editItem(\''+i.id+'\')" title="Edit">✏</button><button class="act-btn del" onclick="deleteItem(\''+i.id+'\')" title="Delete">✕</button></td>'
+      +'<td class="actions"><button class="act-btn" onclick="editItem(\''+i.id+'\')" title="Edit"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L9 17l-4 1 1-4 10.5-10.5Z"/></svg></button><button class="act-btn del" onclick="deleteItem(\''+i.id+'\')" title="Delete">✕</button></td>'
       +'</tr>';
   }).join('');
   updateBulkBar();
@@ -1789,7 +1773,7 @@ function renderMobileCards(filtered) {
       +'<div class="mob-card-top">'
       +  '<div class="mob-card-name">'+esc(i.name)+'</div>'
       +  '<div class="mob-card-actions">'
-      +    '<button class="act-btn" onclick="editItem(\''+i.id+'\')" title="Edit">✏</button>'
+      +    '<button class="act-btn" onclick="editItem(\''+i.id+'\')" title="Edit"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L9 17l-4 1 1-4 10.5-10.5Z"/></svg></button>'
       +    '<button class="act-btn del" onclick="deleteItem(\''+i.id+'\')" title="Delete">✕</button>'
       +  '</div>'
       +'</div>'
@@ -2360,10 +2344,10 @@ function renderPnl() {
     months[m].profit+=(sold-cost); months[m].revenue+=sold; months[m].count++;
   });
   var ytd=0; months.forEach(function(m){ytd+=m.profit;});
-  var cardEl=document.getElementById('card-inv');
+  var cardEl=document.getElementById('analytics-ytd');
   if(cardEl){
     cardEl.textContent=(ytd>=0?'+':'')+'$'+Math.abs(ytd).toFixed(2);
-    cardEl.className='card-value '+(ytd>=0?'col-green':'col-red');
+    cardEl.className='analytics-ytd '+(ytd>=0?'col-green':'col-red');
   }
   var lbl=document.getElementById('pnl-year-label'); if(lbl) lbl.textContent=yr;
   var grid=document.getElementById('pnl-grid'); if(!grid) return;
@@ -2402,35 +2386,152 @@ function renderPnl() {
   });
 }
 
+
+// Premium dashboard: all widgets derive from existing item and supplier records.
+function moneyDash(n){ return '$'+(Number(n)||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function globalSearch(value){
+  if(currentTab!=='inventory') switchTab('inventory');
+  document.getElementById('search').value=value;
+  renderTable();
+}
+function toggleMobileMore(force){
+  var sheet=document.getElementById('mobile-more-sheet'),bg=document.getElementById('mobile-more-backdrop'),btn=document.getElementById('bnav-more');
+  if(!sheet||!bg||!btn)return;
+  var open=typeof force==='boolean'?force:!sheet.classList.contains('open');
+  sheet.classList.toggle('open',open);bg.classList.toggle('open',open);btn.classList.toggle('active',open);btn.setAttribute('aria-expanded',String(open));
+}
+window.addEventListener('keydown',function(e){
+  if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();var el=document.getElementById('global-search');if(el){el.focus();el.select();}}
+  if(e.key==='Escape') toggleMobileMore(false);
+});
+function renderFeatureChart(buckets, labels){
+  var svg=document.getElementById('feature-chart');if(!svg)return;
+  var rev=buckets.map(function(b){return b.sold;});
+  var total=items.reduce(function(sum,i){return sum+(hasSold(i)?parseFloat(i.sold)||0:0);},0);
+  var val=document.getElementById('feature-revenue');if(val)val.textContent=moneyDash(total);
+  // Match the SVG's logical coordinate system to its displayed size. No squashing/stretching.
+  var W=Math.max(310,Math.round(svg.clientWidth||700));
+  var H=Math.max(170,Math.round(svg.clientHeight||220));
+  svg.setAttribute('viewBox','0 0 '+W+' '+H);
+  svg.setAttribute('preserveAspectRatio','xMidYMid meet');
+  var max=Math.max.apply(null,rev.concat([1]))*1.18;
+  var L=38,R=W-18,T=19,B=H-33,iw=R-L,ih=B-T;
+  var pos=rev.map(function(v,i){return [L+iw*i/(rev.length-1),B-(v/max)*ih];});
+  var line=pos.map(function(p,i){return(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1);}).join(' ');
+  var area=line+' L'+R+' '+B+' L'+L+' '+B+' Z';
+  var main='hsl('+accentHue+' 87% 69%)', light='hsl('+accentHue+' 92% 83%)';
+  var html='<defs><linearGradient id="revFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="'+main+'" stop-opacity=".3"/><stop offset="1" stop-color="'+main+'" stop-opacity="0"/></linearGradient><linearGradient id="revLine" x1="0" y1="0" x2="1" y2="0"><stop stop-color="'+main+'"/><stop offset="1" stop-color="'+light+'"/></linearGradient></defs>';
+  [0,1,2,3].forEach(function(i){var y=T+i*ih/3;html+='<line x1="'+L+'" y1="'+y+'" x2="'+R+'" y2="'+y+'" stroke="currentColor" opacity=".09" stroke-dasharray="4 6"/>';});
+  html+='<path d="'+area+'" fill="url(#revFill)"/>';
+  html+='<path d="'+line+'" fill="none" stroke="url(#revLine)" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>';
+  pos.forEach(function(p,i){ if(rev[i]>0)html+='<circle cx="'+p[0]+'" cy="'+p[1]+'" r="3.9" fill="'+light+'" stroke="var(--bg2)" stroke-width="2"><title>'+labels[i]+': '+moneyDash(rev[i])+'</title></circle>';});
+  [0,2,4,7].forEach(function(i){html+='<text x="'+pos[i][0]+'" y="'+(H-8)+'" font-size="11" fill="currentColor" opacity=".50" text-anchor="middle">'+labels[i]+'</text>';});
+  svg.innerHTML=html;
+  var msg=document.getElementById('feature-chart-empty');if(msg)msg.hidden=rev.some(function(v){return v>0;});
+}
+// Reflow the actual chart coordinates whenever the layout width changes.
+var featureResizeFrame=0;
+window.addEventListener('resize',function(){
+  if(currentTab!=='dashboard'||featureResizeFrame)return;
+  featureResizeFrame=requestAnimationFrame(function(){featureResizeFrame=0;buildCharts();});
+});
+function incomingBatchesFromItems(data){
+  var groups=new Map();
+  (data||[]).forEach(function(item){
+    if(item.status!=='Shipped by Supplier')return;
+    var number=String(item.tracking||'').trim();
+    if(!number)return;
+    var raw=item.updatedAt||item.updatedat||item.addedAt||item.added_at;
+    var d=raw?new Date(raw):null;
+    var time=d && !isNaN(d.getTime())?d.getTime():0;
+    var day=time?[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-'):'undated';
+    var key=day+'|'+number.replace(/\s/g,'').toUpperCase();
+    var group=groups.get(key);
+    if(!group){group={day:day,tracking:number,time:time,total:0,products:new Map()};groups.set(key,group);}
+    group.total++;
+    group.time=Math.max(group.time,time);
+    var name=String(item.name||'Unnamed item').trim()||'Unnamed item';
+    var productKey=name.toLocaleLowerCase();
+    var existing=group.products.get(productKey);
+    if(existing)existing.qty++;
+    else group.products.set(productKey,{name:name,qty:1});
+  });
+  return [...groups.values()].sort(function(a,b){return b.time-a.time||a.tracking.localeCompare(b.tracking);});
+}
+function copyBatchTracking(btn){
+  var tracking=btn.getAttribute('data-tracking');if(!tracking)return;
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(tracking).then(function(){btn.textContent='Copied!';setTimeout(function(){btn.textContent='Copy';},1800);})
+      .catch(function(){window.prompt('Copy tracking number:',tracking);});
+  }else window.prompt('Copy tracking number:',tracking);
+}
+function renderIncomingShipments(){
+  var el=document.getElementById('shipment-batches');if(!el)return;
+  var batches=incomingBatchesFromItems(items);
+  if(!batches.length){el.innerHTML='<div class="shipment-empty"><span aria-hidden="true">▣</span><strong>Nothing in transit yet</strong><small>Items marked “Shipped by Supplier” with a tracking number will appear here.</small></div>';return;}
+  el.innerHTML=batches.slice(0,4).map(function(b,i){
+    var date=b.day==='undated'?'Date unavailable':new Date(b.day+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    var url=detectCarrier(b.tracking);
+    var carrier=carrierName(b.tracking);
+    var copy='<button class="batch-copy" data-tracking="'+esc(b.tracking)+'" onclick="copyBatchTracking(this)" title="Copy tracking number">Copy</button>';
+    var track=url?'<a class="batch-track-link" href="'+esc(url)+'" target="_blank" rel="noopener noreferrer" aria-label="Track '+esc(b.tracking)+' with '+carrier+'">Track ↗</a>':'';
+    return '<article class="shipment-batch"><div class="batch-top"><span class="batch-id">BATCH '+String(i+1).padStart(2,'0')+'</span><span class="batch-date">'+date+'</span></div><div class="batch-meta"><span>'+b.total+' unit'+(b.total===1?'':'s')+' incoming</span><span>'+(carrier||'Tracking added')+'</span></div><div class="batch-tracking"><span class="batch-track-num" title="'+esc(b.tracking)+'">'+esc(b.tracking)+'</span>'+copy+track+'</div></article>';
+  }).join('')+(batches.length>4?'<div class="batch-overflow">'+(batches.length-4)+' additional batch'+(batches.length-4===1?'':'es')+' in inventory</div>':'');
+}
+function renderOperationalExtras(){
+  var sold=0,profit=0,revenue=0,cost=0,disputes=0,shipped=0,pending=0;
+  var stateCount={};
+  items.forEach(function(i){
+    var c=parseFloat(i.cost)||0,s=parseFloat(i.sold)||0;cost+=c;
+    if(hasSold(i)){sold++;revenue+=s;profit+=s-c;}
+    if(i.status==='DISPUTE')disputes++;
+    if(i.status==='Shipped by Supplier'||i.status==='Shipped to Buyer')shipped++;
+    if(i.status==='Pending')pending++;
+    stateCount[i.status]=(stateCount[i.status]||0)+1;
+  });
+  function set(id,v){var el=document.getElementById(id);if(el)el.textContent=v;}
+  set('ana-profit',moneyDash(profit));set('ana-revenue',moneyDash(revenue));set('ana-cost',moneyDash(cost));
+  set('ana-margin',(revenue?profit/revenue*100:0).toFixed(1)+'%');
+  var list=document.getElementById('operations-list');
+  if(list){
+    var actions=[
+      {name:'Disputes to review',n:disputes,description:disputes?'Items awaiting resolution':'No open disputes',type:'warning',filter:'DISPUTE'},
+      {name:'Orders in transit',n:shipped,description:shipped?'Shipping in progress':'No shipments currently',type:'info',filter:'shipped'},
+      {name:'Pending inventory',n:pending,description:pending?'Awaiting next steps':'Everything is up to date',type:'purple',filter:'Pending'}
+    ];
+    list.innerHTML=actions.map(function(a){return '<button class="ops-row" onclick="chipFilter(\''+a.filter+'\')"><span class="ops-marker '+a.type+'"></span><span class="ops-copy"><strong>'+a.name+'</strong><small>'+a.description+'</small></span><span class="ops-number">'+a.n+'</span></button>';}).join('');
+  }
+  var box=document.getElementById('status-distribution');
+  if(box){
+    var statuses=[['Delivered at Home','At home','home'],['Shipped by Supplier','Supplier shipped','supplier'],['Shipped to Buyer','Buyer shipped','buyer'],['Pending','Pending','pending'],['DISPUTE','Disputes','dispute']];
+    // Exclude SOLD and all other statuses from the denominator too, so old sales never flatten active-stock bars.
+    var denom=statuses.reduce(function(total,a){return total+(stateCount[a[0]]||0);},0)||1;
+    box.innerHTML=statuses.map(function(a){var n=stateCount[a[0]]||0,pct=n/denom*100;return '<button class="status-meter" onclick="chipFilter(\''+a[0]+'\')" aria-label="Filter inventory: '+a[1]+'"><span class="meter-head"><span>'+a[1]+'</span><strong>'+n+'</strong></span><span class="meter-track"><span class="meter-fill '+a[2]+'" style="width:'+pct.toFixed(2)+'%"></span></span></button>';}).join('');
+  }
+  renderIncomingShipments();
+  var date=document.getElementById('hero-date');if(date)date.textContent=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}).toUpperCase();
+}
+
 </script>
 <!-- FAB (mobile add button) -->
 <button class="fab" onclick="openAddModal()" title="Add Product">+</button>
 
-<!-- BOTTOM NAV (mobile) -->
-<div class="bottom-nav">
-  <div class="bottom-nav-inner">
-    <button class="bnav-tab active" id="bnav-dashboard" onclick="switchTab('dashboard')">
-      <span class="bnav-icon">⊞</span>
-      <span class="bnav-label">Dashboard</span>
-    </button>
-    <button class="bnav-tab" id="bnav-inventory" onclick="switchTab('inventory')">
-      <span class="bnav-icon">📦</span>
-      <span class="bnav-label">Inventory</span>
-    </button>
-    <button class="bnav-tab" id="bnav-suppliers" onclick="switchTab('suppliers')">
-      <span class="bnav-icon">🤝</span>
-      <span class="bnav-label">Suppliers</span>
-    </button>
-    <button class="bnav-tab" id="bnav-emails" onclick="switchTab('emails')">
-      <span class="bnav-icon">✉</span><span class="bnav-label">Emails</span>
-    </button>
-    <button class="bnav-tab" id="bnav-settings" onclick="switchTab('settings')">
-      <span class="bnav-icon">⚙</span>
-      <span class="bnav-label">Settings</span>
-    </button>
-  </div>
+<!-- MOBILE NAVIGATION -->
+<div class="bottom-nav" role="navigation" aria-label="Mobile navigation"><div class="bottom-nav-inner">
+  <button class="bnav-tab active" id="bnav-dashboard" onclick="switchTab('dashboard')"><svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span class="bnav-label">Home</span></button>
+  <button class="bnav-tab" id="bnav-inventory" onclick="switchTab('inventory')"><svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 7 9-4 9 4v10l-9 4-9-4V7Z"/><path d="m3 7 9 4 9-4M12 11v10"/></svg><span class="bnav-label">Inventory</span></button>
+  <button class="bnav-tab" id="bnav-suppliers" onclick="switchTab('suppliers')"><svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 20v-2a6 6 0 0 1 12 0v2M16 5a3 3 0 0 1 0 6m2 3a5 5 0 0 1 3 5"/></svg><span class="bnav-label">Suppliers</span></button>
+  <button class="bnav-tab" id="bnav-analytics" onclick="switchTab('analytics')"><svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="m6 16 5-6 4 3 6-8"/></svg><span class="bnav-label">Analytics</span></button>
+  <button class="bnav-tab" id="bnav-more" aria-expanded="false" onclick="toggleMobileMore()"><svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg><span class="bnav-label">More</span></button>
+</div></div>
+<div class="mobile-more-backdrop" id="mobile-more-backdrop" onclick="toggleMobileMore(false)"></div>
+<div class="mobile-more-sheet" id="mobile-more-sheet" role="dialog" aria-modal="true" aria-label="More options"><div class="sheet-handle"></div><div class="sheet-head">Workspace tools <button onclick="toggleMobileMore(false)" aria-label="Close">✕</button></div>
+  <button onclick="toggleMobileMore(false);switchTab('emails')"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg> Email templates <svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button>
+  <button onclick="toggleMobileMore(false);importCSV()"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V3m-5 5 5-5 5 5M4 16v4h16v-4"/></svg> Import CSV <svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button>
+  <button onclick="toggleMobileMore(false);exportCSV()"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v13m-5-5 5 5 5-5M4 18v3h16v-3"/></svg> Export CSV <svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button>
+  <button onclick="toggleMobileMore(false);openSettings()"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z"/><path d="m19.4 15 .1.1 1.5 1.2-1.5 2.6-1.9-.6a8 8 0 0 1-1.9 1.1l-.4 2h-3l-.4-2a8 8 0 0 1-1.9-1.1l-1.9.6-1.5-2.6 1.5-1.2a8 8 0 0 1 0-2.2l-1.5-1.2 1.5-2.6 1.9.6a8 8 0 0 1 1.9-1.1l.4-2h3l.4 2a8 8 0 0 1 1.9 1.1l1.9-.6 1.5 2.6-1.5 1.2a8 8 0 0 1 0 2.2Z" transform="translate(-1 -2) scale(.94)"/></svg> Settings <svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button>
+  <button onclick="toggleMobileMore(false);doLock()"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg> Lock workspace <svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button>
 </div>
-
 
 <!-- BULK ACTION BAR -->
 <div class="bulk-bar" id="bulk-bar">
