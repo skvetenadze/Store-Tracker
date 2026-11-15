@@ -604,6 +604,296 @@ tbody tr.selected { background:rgba(34,197,94,0.07) !important; }
 .pnl-tt-sub    { font-size:11px; color:var(--text3); }
 </style>
 <link rel="stylesheet" href="premium.css">
+<!-- Readability update: one typography step larger throughout desktop and mobile.
+     This stays inside index.html; the existing premium.css and JS are unchanged. -->
+<style id="readability-font-upgrade">
+/* The original stylesheet's breakpoints and specificity are maintained. */
+body{font-size:15.5px;}
+.nav-logo-icon{font-size:18.5px;}
+.nav-logo-name{font-size:16.5px;}
+.nav-tab{font-size:14.5px;}
+.sstat-lbl{font-size:11.5px;}
+.sstat-val{font-size:17.5px;}
+.chip{font-size:12.5px;}
+.btn{font-size:13.5px;}
+.card-title{font-size:15.5px;}
+.card-link{font-size:13.5px;}
+.card-value{font-size:32px;}
+.card-chart-lbl{font-size:11.5px;}
+.recent-title{font-size:17.5px;}
+.recent-empty{font-size:14.5px;}
+.week-title{font-size:15.5px;}
+.week-badge{font-size:12.5px;}
+.week-stat-lbl{font-size:11.5px;}
+.week-stat-val{font-size:32px;}
+.week-stat-sub{font-size:12.5px;}
+.insights-title{font-size:17.5px;}
+.insight-lbl{font-size:11.5px;}
+.insight-val{font-size:23.5px;}
+.insight-sub{font-size:12.5px;}
+.insight-delta{font-size:13.5px;}
+.insight-empty{font-size:13.5px;}
+.insight-list li{font-size:13.5px;}
+.insight-list .il-cs{font-size:11.5px;}
+.toolbar input,.toolbar select{font-size:14.5px;}
+.item-count{font-size:13.5px;}
+thead th{font-size:12.5px;}
+@media (max-width:768px){input, select, textarea{font-size:17.5px !important;}}
+td.notes{font-size:13.5px;}
+td.date-col{font-size:13.5px;}
+.badge{font-size:12.5px;}
+.return-by-tag{font-size:11.5px;}
+.tracking-link{font-size:13.5px;}
+.tracking-plain{font-size:13.5px;}
+.act-btn{font-size:15.5px;}
+.empty-icon{font-size:42px;}
+.empty p{font-size:15.5px;}
+.empty small{font-size:13.5px;}
+.modal h2{font-size:17.5px;}
+.form-row label{font-size:13.5px;}
+.form-row input,.form-row select,.form-row textarea{font-size:14.5px;}
+.form-hint{font-size:12.5px;}
+.settings-sec-title{font-size:12.5px;}
+.theme-lbl{font-size:14.5px;}
+.theme-lbl small{font-size:12.5px;}
+.pill-opt{font-size:13.5px;}
+.color-row-name{font-size:13.5px;}
+.color-grp label{font-size:11.5px;}
+.btn-reset{font-size:12.5px;}
+.mob-card-name{font-size:15.5px;}
+.mob-card-money{font-size:14.5px;}
+.mob-card-profit-pos{font-size:14.5px;}
+.mob-card-profit-neg{font-size:14.5px;}
+.mob-card-tracking{font-size:12.5px;}
+.mob-card-date{font-size:12.5px;}
+.mob-card-notes{font-size:13.5px;}
+.mob-empty-icon{font-size:38px;}
+.mob-empty p{font-size:15.5px;}
+.mob-empty small{font-size:13.5px;}
+.fab{font-size:28px;}
+.bnav-icon{font-size:21.5px;}
+.bnav-label{font-size:11.5px;}
+@media (max-width: 768px){.item-count{font-size:12.5px;}
+.card-value{font-size:23.5px;}
+.week-stat-val{font-size:21.5px;}
+.insight-val{font-size:21.5px;}
+.insight-list .il-cs{font-size:10.5px;}
+.form-row input, .form-row select, .form-row textarea{font-size:17.5px;}
+.form-row label{font-size:14.5px;}
+.modal-actions .btn{font-size:15.5px;}
+.modal h2{font-size:19.5px;}}
+@media (max-width: 420px){.card-value{font-size:28px;}}
+.sup-hdr-text h2{font-size:23.5px;}
+.sup-hdr-text p{font-size:14.5px;}
+.sup-name{font-size:16.5px;}
+.sup-badge{font-size:12.5px;}
+.sup-star{font-size:17.5px;}
+.sup-contact{font-size:13.5px;}
+.sup-desc{font-size:14.5px;}
+.sup-empty-icon{font-size:42px;}
+.sup-empty p{font-size:15.5px;}
+.sup-empty small{font-size:13.5px;}
+.star-pick{font-size:23.5px;}
+.bulk-count{font-size:14.5px;}
+.bulk-label{font-size:13.5px;}
+.bulk-select{font-size:13.5px;}
+.bulk-input{font-size:13.5px;}
+.bulk-apply{font-size:13.5px;}
+.bulk-deselect{font-size:13.5px;}
+.bulk-sum-lbl{font-size:11.5px;}
+.bulk-sum-val{font-size:14.5px;}
+.pin-logo{font-size:30px;}
+.pin-title{font-size:21.5px;}
+.pin-sub{font-size:14.5px;}
+.pin-key{font-size:23.5px;}
+.pin-key.del{font-size:19.5px;}
+.pin-error{font-size:14.5px;}
+.lock-btn{font-size:13.5px;}
+.email-panel-title{font-size:16.5px;}
+.email-lbl{font-size:12.5px;}
+.email-hint{font-size:11.5px;}
+.email-hint code{font-size:11.5px;}
+.email-input{font-size:14.5px;}
+.email-textarea{font-size:13.5px;}
+.email-field-lbl{font-size:12.5px;}
+.email-field-input{font-size:14.5px;}
+.email-preview-label{font-size:11.5px;}
+.email-status{font-size:13.5px;}
+.email-preview-hint{font-size:11.5px;}
+.em-img-title{font-size:14.5px;}
+.ct-date{font-size:11.5px;}
+.ct-val{font-size:16.5px;}
+.pnl-mo{font-size:10.5px;}
+.pnl-tt-month{font-size:11.5px;}
+.pnl-tt-profit{font-size:16.5px;}
+.pnl-tt-sub{font-size:12.5px;}
+body{font-size:15.5px;}
+.brand-words strong{font-size:15.5px;}
+.brand-words small{font-size:9.5px;}
+.sidebar-section-label{font-size:11.5px;}
+.nav-tab{font-size:14px;}
+.sidebar-highlight strong{font-size:14.5px;}
+.sidebar-highlight p{font-size:12.5px;}
+.sidebar-highlight button{font-size:12.5px;}
+.profile-avatar,.top-avatar{font-size:12.5px;}
+.profile-detail strong{font-size:12.5px;}
+.profile-detail small{font-size:11.5px;}
+.topbar-identity{font-size:13.5px;}
+.topbar-search input{font-size:13.5px;}
+.topbar-search kbd{font-size:11.5px;}
+.top-action{font-size:13px;}
+.page-hero h1,.inventory-page-header h1,.email-page-header h1{font-size:31px;}
+.page-hero p,.inventory-page-header p,.email-page-header p{font-size:14px;}
+.eyebrow,.panel-eyebrow{font-size:11.5px;}
+.wave{font-size:25.5px;}
+.btn{font-size:13px;}
+.panel-heading h2,.section-head h2{font-size:16.5px;}
+.panel-heading p{font-size:12.5px;}
+.panel-link{font-size:12.5px;}
+.tiny-label{font-size:11.5px;}
+.kpi-context{font-size:10.5px;}
+.kpi-label{font-size:13.5px;}
+.card-value{font-size:26.5px;}
+.kpi-footer>span{font-size:11.5px;}
+.live-tag{font-size:10.5px;}
+.chart-total-label{font-size:12.5px;}
+.chart-total{font-size:29px;}
+.chart-key{font-size:11.5px;}
+.chart-empty-note{font-size:12.5px;}
+.ops-copy strong{font-size:13px;}
+.ops-copy small{font-size:11.5px;}
+.ops-number{font-size:12.5px;}
+.quick-actions button{font-size:11.5px;}
+.meter-head{font-size:11.5px;}
+.meter-head strong{font-size:11.5px;}
+.recent-box thead th{font-size:10.5px;}
+.recent-box tbody td{font-size:13px;}
+.recent-box tbody td.name{font-size:13.5px;}
+.recent-empty{font-size:13.5px;}
+.week-title{font-size:16.5px;}
+.pill-opt{font-size:11.5px;}
+.week-stat-lbl{font-size:11.5px;}
+.week-stat-val{font-size:24.5px;}
+.week-stat-sub{font-size:11.5px;}
+.pnl-mo{font-size:11.5px;}
+.analytics-ytd{font-size:26.5px;}
+.analytic-totals span{font-size:13px;}
+.analytic-totals strong{font-size:15.5px;}
+.section-head h2{font-size:17.5px;}
+.insight-lbl{font-size:11.5px;}
+.insight-val{font-size:22.5px;}
+.insight-list li{font-size:12.5px;}
+.insight-list .il-count{font-size:11.5px;}
+.inventory-page-header h1,.sup-hdr-text h2{font-size:28px;}
+.inventory-page-header p,.sup-hdr-text p{font-size:13.5px;}
+.toolbar input,.toolbar select{font-size:13.5px;}
+.filter-caption{font-size:10.5px;}
+.chip{font-size:11.5px;}
+.table-area table thead th{font-size:10.5px;}
+.table-area table tbody td{font-size:13.5px;}
+.table-area table tbody td .act-btn{font-size:15.5px;}
+.badge{font-size:11.5px;}
+.sup-name{font-size:16.5px;}
+.sup-badge{font-size:11.5px;}
+.sup-desc{font-size:13.5px;}
+.email-preview-hint{font-size:11.5px;}
+.email-panel-title{font-size:16.5px;}
+.modal h2{font-size:19.5px;}
+.form-row label{font-size:12.5px;}
+.form-row input,.form-row select,.form-row textarea{font-size:14.5px;}
+.form-hint{font-size:11.5px;}
+@media (max-width:1250px){.card-value{font-size:23.5px;}}
+@media (max-width:1030px){.kpi-footer>span{font-size:10.5px;}
+.week-stat-val{font-size:20.5px;}}
+@media (max-width:768px){.topbar-identity{font-size:13.5px;}
+.topbar-identity strong{font-size:15.5px;}
+.topbar-search input{font-size:12.5px;}
+.page-hero h1,.inventory-page-header h1,.email-page-header h1{font-size:25.5px;}
+.page-hero p{font-size:12.5px;}
+.eyebrow{font-size:10.5px;}
+.wave{font-size:19.5px;}
+.kpi-context{font-size:9.5px;}
+.kpi-label{font-size:12px;}
+.card-value{font-size:21.5px;}
+.kpi-footer>span{font-size:10.5px;}
+.panel-heading h2{font-size:15.5px;}
+.panel-heading p{font-size:11.5px;}
+.panel-eyebrow{font-size:10.5px;}
+.chart-total{font-size:25.5px;}
+.live-tag{font-size:9.5px;}
+.chart-key{font-size:10.5px;}
+.recent-box thead th{font-size:10.5px;}
+.recent-box tbody td{font-size:11.5px;}
+.recent-box tbody td.name{font-size:12.5px;}
+.pill-opt{font-size:11.5px;}
+.week-badge{font-size:10.5px;}
+.week-stat-val{font-size:21.5px;}
+.week-stat-sub{font-size:10.5px;}
+.bnav-label{font-size:10.5px;}
+.fab{font-size:26.5px;}
+.sheet-head{font-size:18.5px;}
+.mobile-more-sheet>button{font-size:14.5px;}
+.inventory-page-header h1{font-size:25.5px;}
+.inventory-page-header p{font-size:12.5px;}
+.toolbar select{font-size:13.5px !important;}
+.toolbar input{font-size:15.5px !important;}
+.toolbar .item-count{font-size:11.5px;}
+.chip{font-size:11.5px;}
+.mob-card-name{font-size:15.5px;}
+.mob-card-money{font-size:11.5px;}
+.mob-card-money strong{font-size:16.5px;}
+.mob-card-profit-pos{font-size:12.5px;}
+.mob-card-profit-neg{font-size:12.5px;}
+.mob-card-date{font-size:10.5px;}
+.mob-card-notes{font-size:12.5px;}
+.mob-card-tracking{font-size:11.5px;}
+.sup-hdr-text h2{font-size:25.5px;}
+.sup-hdr-text p{font-size:12.5px;}
+.sup-hdr>.btn{font-size:11.5px;}
+.email-page-header h1{font-size:25.5px;}
+.email-page-header p{font-size:12.5px;}
+.pnl-mo{font-size:9.5px;}
+.analytics-ytd{font-size:20.5px;}
+.insight-val{font-size:20.5px;}
+.insight-lbl{font-size:10.5px;}
+.insight-list .il-name{font-size:11.5px;}
+.insight-list .il-count{font-size:11.5px;}
+.modal h2{font-size:19.5px;}
+.modal-actions .btn{font-size:14.5px;}
+.form-row input,.form-row select,.form-row textarea{font-size:17.5px !important;}
+.form-row label{font-size:13.5px;}}
+@media (max-width:380px){.topbar-identity strong{font-size:13.5px;}
+.card-value{font-size:19.5px;}
+.kpi-label{font-size:11.5px;}
+.kpi-footer>span{font-size:9.5px;}
+.quick-actions button{font-size:10.5px;}}
+.kpi-neutral-art{font-size:38px;}
+.batch-id{font-size:10.5px;}
+.batch-date{font-size:11.5px;}
+.batch-summary{font-size:13px;}
+.batch-meta{font-size:11.5px;}
+.batch-track-num{font-size:11.5px;}
+.batch-copy{font-size:11.5px;}
+.batch-track-link{font-size:11.5px;}
+.shipment-view-all{font-size:12px;}
+.shipment-view-all span{font-size:16.5px;}
+.shipment-empty>span{font-size:22.5px;}
+.shipment-empty strong{font-size:13px;}
+.shipment-empty small{font-size:11.5px;}
+.batch-overflow{font-size:11.5px;}
+@media (max-width:768px){.kpi-footer>span{font-size:10.5px;}}
+.kpi-chart-card .kpi-footer>span{font-size:10.5px;}
+.quick-actions button{font-size:11.5px;}
+.accent-heading strong{font-size:14.5px;}
+.accent-heading small{font-size:12.5px;}
+.accent-preset{font-size:11.5px;}
+.accent-slider-label{font-size:12.5px;}
+#accent-hue-label{font-size:12.5px;}
+.accent-slider-endpoints{font-size:10.5px;}
+.accent-note{font-size:11.5px;}
+@media (max-width:768px){.kpi-chart-card .kpi-footer>span{font-size:10px;}}
+</style>
+
 
 <script>
 // Web replacement for Electron preload API. Keeps the app UI/functions the same.
